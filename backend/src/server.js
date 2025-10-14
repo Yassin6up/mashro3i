@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-const { createTables } = require('./config/initDatabase');
+const { createTables, insertDefaultPaymentMethods } = require('./config/initDatabase');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const transactionRoutes = require('./routes/transactions');
@@ -30,10 +30,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // Initialize database tables after server starts
-setTimeout(() => {
-  createTables().catch(err => {
+setTimeout(async () => {
+  try {
+    await createTables();
+    await insertDefaultPaymentMethods();
+  } catch (err) {
     console.error('Failed to initialize database:', err);
-  });
+  }
 }, 100);
 
 // Routes

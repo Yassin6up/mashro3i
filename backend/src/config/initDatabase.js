@@ -35,11 +35,14 @@ const createTables = async () => {
         title VARCHAR(255) NOT NULL,
         description TEXT,
         category VARCHAR(100),
+        project_type VARCHAR(100),
         price DECIMAL(10, 2) NOT NULL,
         images TEXT[],
         files TEXT[],
         technologies TEXT[],
         demo_url VARCHAR(500),
+        video_links TEXT[],
+        video_source VARCHAR(50),
         is_profitable BOOLEAN DEFAULT FALSE,
         revenue_type VARCHAR(50),
         monthly_revenue DECIMAL(10, 2),
@@ -131,6 +134,44 @@ const createTables = async () => {
       )
     `);
 
+    // Payment methods table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS payment_methods (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        country VARCHAR(100),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Withdrawal methods table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS withdrawal_methods (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        country VARCHAR(100),
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // User payment preferences table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_payment_preferences (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        payment_method_id INTEGER REFERENCES payment_methods(id) ON DELETE CASCADE,
+        withdrawal_method_id INTEGER REFERENCES withdrawal_methods(id) ON DELETE CASCADE,
+        account_details TEXT,
+        is_default BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Database tables created successfully');
     
@@ -143,4 +184,45 @@ const createTables = async () => {
   }
 };
 
-module.exports = { createTables };
+const insertDefaultPaymentMethods = async () => {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+
+    // Check if payment methods already exist
+    const { rows } = await client.query('SELECT COUNT(*) FROM payment_methods');
+    
+    if (parseInt(rows[0].count) === 0) {
+      // Egyptian payment methods
+      await client.query(`
+        INSERT INTO payment_methods (name, type, country, is_active) VALUES
+        ('فودافون كاش', 'mobile_wallet', 'مصر', TRUE),
+        ('اتصالات كاش', 'mobile_wallet', 'مصر', TRUE),
+        ('أورانج كاش', 'mobile_wallet', 'مصر', TRUE),
+        ('بطاقة بنكية', 'bank_card', NULL, TRUE)
+      `);
+
+      // Withdrawal methods (same for Egypt)
+      await client.query(`
+        INSERT INTO withdrawal_methods (name, type, country, is_active) VALUES
+        ('فودافون كاش', 'mobile_wallet', 'مصر', TRUE),
+        ('اتصالات كاش', 'mobile_wallet', 'مصر', TRUE),
+        ('أورانج كاش', 'mobile_wallet', 'مصر', TRUE),
+        ('تحويل بنكي', 'bank_transfer', NULL, TRUE)
+      `);
+
+      console.log('✅ Default payment and withdrawal methods inserted');
+    }
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error inserting payment methods:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { createTables, insertDefaultPaymentMethods };
