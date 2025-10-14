@@ -1,0 +1,176 @@
+# منصة المنتجات الرقمية - Digital Products Marketplace
+
+## نظرة عامة
+منصة متكاملة لبيع وشراء المشاريع الرقمية مع نظام Escrow آمن وخصم 15% للمنصة.
+
+## البنية التقنية
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Port**: 5000
+- **URL**: http://localhost:5000
+
+### Backend
+- **Framework**: Express.js
+- **Language**: Node.js
+- **Database**: PostgreSQL (Neon)
+- **Port**: 3001
+- **API Base**: http://localhost:3001/api
+
+## المزايا الرئيسية
+
+### 1. نظام المصادقة
+- تسجيل دخول/إنشاء حساب للبائع والمشتري
+- JWT Authentication
+- حماية الصفحات والـ APIs
+
+### 2. نظام المشاريع
+- رفع المشاريع (للبائعين)
+- تصفح المشاريع
+- البحث والفلترة
+- تفاصيل المشروع
+
+### 3. نظام Escrow (الضمان)
+- حجز الأموال بشكل آمن
+- خصم 15% للمنصة تلقائياً
+- فترة مراجعة 7 أيام
+- إمكانية الدفع بالأقساط
+- نظام استرداد الأموال
+
+### 4. نظام المعاملات
+- تتبع المعاملات
+- حالات مختلفة (pending, escrow_held, completed, refunded, disputed)
+- سجل المعاملات للبائع والمشتري
+- حساب أرباح المنصة
+
+### 5. نظام الإشعارات
+- إشعارات الوقت الفعلي
+- أنواع مختلفة من الإشعارات
+- عداد الإشعارات غير المقروءة
+
+### 6. نظام الدردشة
+- تواصل مباشر بين البائع والمشتري
+- تتبع الرسائل
+- عداد الرسائل غير المقروءة
+
+## قاعدة البيانات
+
+### الجداول الرئيسية:
+1. **users** - المستخدمين (بائعين ومشترين)
+2. **projects** - المشاريع المعروضة
+3. **transactions** - المعاملات
+4. **escrow** - حفظ الأموال
+5. **installments** - الأقساط
+6. **notifications** - الإشعارات
+7. **messages** - الرسائل
+8. **platform_earnings** - أرباح المنصة (15%)
+
+## API Endpoints
+
+### Authentication (`/api/auth`)
+- `POST /register/seller` - تسجيل بائع
+- `POST /register/customer` - تسجيل مشتري
+- `POST /login` - تسجيل دخول
+- `GET /profile` - الملف الشخصي
+- `PUT /profile` - تحديث الملف الشخصي
+
+### Projects (`/api/projects`)
+- `GET /` - جميع المشاريع
+- `GET /:id` - تفاصيل مشروع
+- `POST /` - إنشاء مشروع (بائع فقط)
+- `PUT /:id` - تحديث مشروع (بائع فقط)
+- `DELETE /:id` - حذف مشروع (بائع فقط)
+
+### Transactions (`/api/transactions`)
+- `POST /` - إنشاء معاملة (مشتري فقط)
+- `GET /` - معاملات المستخدم
+- `GET /:id` - تفاصيل معاملة
+- `POST /:id/release` - إطلاق الأموال من Escrow
+- `POST /:id/refund` - طلب استرداد
+- `GET /platform/earnings` - أرباح المنصة
+
+### Notifications (`/api/notifications`)
+- `GET /` - الإشعارات
+- `GET /unread-count` - عدد غير المقروءة
+- `PATCH /:id/read` - تحديد كمقروء
+- `DELETE /:id` - حذف إشعار
+
+### Chat (`/api/chat`)
+- `POST /send` - إرسال رسالة
+- `GET /conversations` - المحادثات
+- `GET /:user_id` - رسائل مع مستخدم
+- `GET /unread-count` - عدد غير المقروءة
+
+## نظام Escrow والعمولة
+
+### آلية العمل:
+1. المشتري يشتري مشروع
+2. يتم حجز المبلغ الكامل في Escrow
+3. يتم حساب عمولة المنصة (15%) تلقائياً
+4. المبلغ المتبقي (85%) محفوظ للبائع
+5. فترة مراجعة 7 أيام
+6. بعد الموافقة أو انتهاء المدة:
+   - يتم تحويل 85% للبائع
+   - يتم تحويل 15% لحساب المنصة
+
+### مثال حسابي:
+- سعر المشروع: 1000$
+- عمولة المنصة (15%): 150$
+- مبلغ البائع (85%): 850$
+
+## متغيرات البيئة
+
+### Backend (backend/.env)
+```
+PORT=3001
+JWT_SECRET=your_jwt_secret_key
+PLATFORM_FEE_PERCENTAGE=15
+FRONTEND_URL=http://localhost:5000
+```
+
+### Frontend
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+```
+
+## التشغيل
+
+### Development
+```bash
+# Frontend (Port 5000)
+npm run dev
+
+# Backend (Port 3001)
+cd backend && npm start
+```
+
+### الوصول للمنصة
+- Frontend: http://localhost:5000
+- Backend API: http://localhost:3001/api
+- API Health Check: http://localhost:3001/api/health
+
+## الأمان
+- JWT للمصادقة
+- bcrypt لتشفير كلمات المرور
+- CORS محدد للـ frontend
+- حماية المسارات حسب نوع المستخدم
+- رفع الملفات آمن مع Multer
+
+## ملاحظات مهمة
+- قاعدة البيانات: PostgreSQL (Neon hosted on Replit)
+- رفع الملفات: يتم حفظها في `/backend/uploads`
+- العمولة: 15% ثابتة (قابلة للتعديل في .env)
+- فترة المراجعة: 7 أيام افتراضياً
+
+## التحديثات المستقبلية
+- [ ] بوابات دفع حقيقية (Stripe, PayPal)
+- [ ] نظام التقييمات والمراجعات
+- [ ] إحصائيات ولوحة تحكم للإدارة
+- [ ] نظام الاشتراكات للبائعين
+- [ ] تطبيق موبايل
+
+## آخر تحديث
+تاريخ: 14 أكتوبر 2025
+الحالة: ✅ جاهز للاستخدام
