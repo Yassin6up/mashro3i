@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get payment methods based on country
 router.get('/payment-methods', async (req, res) => {
@@ -62,10 +63,11 @@ router.get('/withdrawal-methods', async (req, res) => {
   }
 });
 
-// Save user payment preference
-router.post('/user-payment-preference', async (req, res) => {
+// Save user payment preference (Protected route)
+router.post('/user-payment-preference', authenticateToken, async (req, res) => {
   try {
-    const { user_id, payment_method_id, withdrawal_method_id, account_details, is_default } = req.body;
+    const { payment_method_id, withdrawal_method_id, account_details, is_default } = req.body;
+    const user_id = req.user.id; // Get user_id from authenticated user
     
     const result = await pool.query(
       `INSERT INTO user_payment_preferences 
@@ -88,10 +90,18 @@ router.post('/user-payment-preference', async (req, res) => {
   }
 });
 
-// Get user payment preferences
-router.get('/user-payment-preference/:userId', async (req, res) => {
+// Get user payment preferences (Protected route)
+router.get('/user-payment-preference/:userId', authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
+    
+    // Verify that user can only access their own preferences
+    if (parseInt(userId) !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'غير مصرح لك بالوصول لهذه البيانات'
+      });
+    }
     
     const result = await pool.query(
       `SELECT upp.*, pm.name as payment_method_name, wm.name as withdrawal_method_name

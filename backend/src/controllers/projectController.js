@@ -19,7 +19,8 @@ const createProject = async (req, res) => {
     } = req.body;
 
     // Validate video links for desktop apps
-    if (project_type === 'desktop_app') {
+    const isDesktopApp = project_type === 'desktop_app' || project_type === 'تطبيقات سطح المكتب';
+    if (isDesktopApp) {
       const videoLinksArray = Array.isArray(video_links) ? video_links : (video_links ? [video_links] : []);
       if (videoLinksArray.length < 6) {
         return res.status(400).json({
