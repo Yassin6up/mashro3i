@@ -84,7 +84,7 @@ const SellerRegisterPage = () => {
     'إعلانات'
   ];
 
-  const handleInputChange = (field: string, value: string | boolean | number | File | File[]) => {
+  const handleInputChange = (field: string, value: string | boolean | number | File | File[] | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -247,8 +247,39 @@ const SellerRegisterPage = () => {
                 صورة الملف الشخصي
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-3xl p-6 text-center hover:border-primary-400 transition-colors duration-200">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600 mb-2">اضغط لرفع صورة أو اسحبها هنا</p>
+                {formData.profileImage ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                      <img 
+                        src={URL.createObjectURL(formData.profileImage)} 
+                        alt="Profile Preview" 
+                        className="w-24 h-24 rounded-full object-cover border-4 border-green-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('profileImage', null)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-green-600 font-medium flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      تم رفع الصورة بنجاح
+                    </p>
+                    <label htmlFor="profileImage" className="px-6 py-2 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-all duration-300 cursor-pointer">
+                      تغيير الصورة
+                    </label>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 mb-2">اضغط لرفع صورة أو اسحبها هنا</p>
+                    <label htmlFor="profileImage" className="px-6 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-200/80 text-slate-700 font-bold rounded-2xl hover:bg-white hover:border-slate-300 hover:text-slate-800 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer inline-flex items-center justify-center">
+                      اختر صورة
+                    </label>
+                  </>
+                )}
                 <input
                   type="file"
                   accept="image/*"
@@ -256,9 +287,6 @@ const SellerRegisterPage = () => {
                   id="profileImage"
                   onChange={(e) => handleFileUpload('profileImage', e.target.files)}
                 />
-                <label htmlFor="profileImage" className="px-6 py-3 bg-white/80 backdrop-blur-sm border-2 border-slate-200/80 text-slate-700 font-bold rounded-2xl hover:bg-white hover:border-slate-300 hover:text-slate-800 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer inline-flex items-center justify-center">
-                  اختر صورة
-                </label>
               </div>
             </div>
 
