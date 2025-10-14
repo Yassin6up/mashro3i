@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -21,25 +21,44 @@ import {
 } from 'lucide-react';
 import ProjectCard from '@/components/ProjectCard';
 import { featuredProjects, categories } from '@/data/projects';
+import { projectsApi } from '@/utils/api';
 import OrbitingCircles from '@/components/ui/orbiting-circles';
 const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('جميع المشاريع');
   const [sortBy, setSortBy] = useState('الأحدث');
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await projectsApi.getAll();
+        setProjects(data);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+        setProjects(featuredProjects); // Fallback to mock data
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const filterProjects = () => {
+    const projectsToFilter = projects.length > 0 ? projects : featuredProjects;
     let filtered = selectedCategory === 'جميع المشاريع' 
-      ? featuredProjects 
-      : featuredProjects.filter(project => project.category === selectedCategory);
+      ? projectsToFilter 
+      : projectsToFilter.filter(project => project.category === selectedCategory);
 
     switch (sortBy) {
       case 'الأعلى سعراً':
-        return filtered.sort((a, b) => b.price - a.price);
+        return filtered.sort((a, b) => Number(b.price) - Number(a.price));
       case 'الأقل سعراً':
-        return filtered.sort((a, b) => a.price - b.price);
+        return filtered.sort((a, b) => Number(a.price) - Number(b.price));
       case 'الأعلى تقييماً':
-        return filtered.sort((a, b) => b.rating - a.rating);
+        return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       case 'الأكثر ربحية':
-        return filtered.sort((a, b) => (b.monthlyRevenue || 0) - (a.monthlyRevenue || 0));
+        return filtered.sort((a, b) => (Number(b.monthly_revenue) || 0) - (Number(a.monthly_revenue) || 0));
       default:
         return filtered;
     }
@@ -254,7 +273,7 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {featuredProjects.filter(p => p.profitable).slice(0, 3).map((project, index) => (
+            {(projects.length > 0 ? projects : featuredProjects).filter(p => p.profitable || p.is_profitable).slice(0, 3).map((project, index) => (
               <div 
                 key={project.id}
                 className="animate-scale-in"

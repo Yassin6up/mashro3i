@@ -22,6 +22,16 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
     return new Intl.NumberFormat('ar-SA').format(num);
   };
 
+  const seller = project.seller || {
+    id: project.seller_id || '',
+    name: project.seller_name || 'بائع',
+    avatar: project.seller_picture || '/logo.png',
+    rating: project.seller_rating || 0,
+    totalSales: project.seller_total_sales || 0
+  };
+
+  const projectImage = project.images?.[0] || project.image || '/logo.png';
+
   return (
     <div className="group cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-5 border border-gray-100 hover:border-blue-100 relative overflow-hidden max-w-sm mx-auto">
       {/* Subtle Background Glow */}
@@ -31,7 +41,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
       <div className="relative overflow-hidden rounded-xl mb-4">
         <div className="aspect-video relative">
           <Image
-            src={project.image}
+            src={projectImage}
             alt={project.title}
             width={400}
             height={225}
@@ -56,7 +66,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
               موثق
             </span>
           )}
-          {project.profitable && (
+          {(project.profitable || project.is_profitable) && (
             <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
               <TrendingUp className="w-3 h-3" />
               مربح
@@ -85,29 +95,35 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
         {/* Seller Info */}
         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
           <Image
-            src={project.seller.avatar}
-            alt={project.seller.name}
+            src={seller.avatar}
+            alt={seller.name}
             width={40}
             height={40}
             className="w-10 h-10 rounded-full ring-2 ring-white shadow-sm"
           />
           <div>
             <Link 
-              href={`/profile/seller/${project.seller.id}`}
+              href={`/profile/seller/${seller.id}`}
               className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-300 hover:text-blue-600 cursor-pointer"
             >
-              {project.seller.name}
+              {seller.name}
             </Link>
             <div className="flex items-center gap-2 text-xs mt-1">
-              <span className="flex items-center gap-1 bg-amber-100 px-2 py-1 rounded-3xl">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span className="text-amber-700">{project.seller.rating}</span>
-              </span>
-              <span className="text-gray-400">•</span>
-              <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-3xl">
-                <Shield className="w-3 h-3 text-blue-500" />
-                <span>{formatNumber(project.seller.totalSales)} مبيعات</span>
-              </span>
+              {seller.rating > 0 && (
+                <>
+                  <span className="flex items-center gap-1 bg-amber-100 px-2 py-1 rounded-3xl">
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    <span className="text-amber-700">{seller.rating}</span>
+                  </span>
+                  <span className="text-gray-400">•</span>
+                </>
+              )}
+              {seller.totalSales > 0 && (
+                <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-3xl">
+                  <Shield className="w-3 h-3 text-blue-500" />
+                  <span>{formatNumber(seller.totalSales)} مبيعات</span>
+                </span>
+              )}
             </div>
           </div>
         </div>

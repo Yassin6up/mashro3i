@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -42,6 +42,7 @@ import {
 import { useNotifications } from '@/contexts/NotificationContext';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import BankAccountModal from '@/components/BankAccountModal';
+import { projectsApi } from '@/utils/api';
 
 const SellerProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -49,6 +50,8 @@ const SellerProfilePage = () => {
   const [showBankModal, setShowBankModal] = useState(false);
   const [hasBankAccount, setHasBankAccount] = useState(false);
   const { stats, getUnreadCount } = useNotifications();
+  const [myProjects, setMyProjects] = useState<any[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [profileData, setProfileData] = useState({
     name: 'أحمد محمد السيد',
     email: 'ahmed.seller@example.com',
@@ -68,47 +71,19 @@ const SellerProfilePage = () => {
     description: 'مطور متخصص في تطوير تطبيقات الويب والجوال بخبرة تزيد عن 8 سنوات. أعمل مع أحدث التقنيات لتقديم حلول مبتكرة وموثوقة للعملاء.'
   });
 
-  const myProjects = [
-    {
-      id: 1,
-      title: 'منصة التجارة الإلكترونية المتكاملة',
-      price: 15000,
-      monthlyRevenue: 2500,
-      status: 'نشط',
-      views: 1250,
-      favorites: 89,
-      orders: 12,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=100&h=100&fit=crop',
-      createdAt: '2024-01-10'
-    },
-    {
-      id: 2,
-      title: 'نظام إدارة المحتوى المتقدم',
-      price: 12000,
-      monthlyRevenue: 1800,
-      status: 'نشط',
-      views: 980,
-      favorites: 67,
-      orders: 8,
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop',
-      createdAt: '2024-01-05'
-    },
-    {
-      id: 3,
-      title: 'تطبيق إدارة المهام الذكي',
-      price: 8500,
-      monthlyRevenue: 0,
-      status: 'مراجعة',
-      views: 234,
-      favorites: 23,
-      orders: 0,
-      rating: 0,
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop',
-      createdAt: '2024-01-20'
-    }
-  ];
+  useEffect(() => {
+    const fetchMyProjects = async () => {
+      try {
+        const data = await projectsApi.getMyProjects();
+        setMyProjects(data);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+    fetchMyProjects();
+  }, []);
 
   const recentOrders = [
     {

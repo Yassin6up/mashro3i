@@ -229,6 +229,15 @@ export const projectsApi = {
     })
     if (!resp?.success) throw new Error(resp?.message || 'Failed to delete project')
     return resp
+  },
+
+  getMyProjects: async () => {
+    type MyProjectsResponse = { success: boolean; data: any[] }
+    const resp = await request<MyProjectsResponse>('/projects/seller/my-projects', {
+      auth: true
+    })
+    if (!resp?.success) throw new Error('Failed to load your projects')
+    return resp.data
   }
 }
 

@@ -13,16 +13,19 @@ const {
 
 // Public routes
 router.get('/', getAllProjects);
-router.get('/:id', getProjectById);
 
-// Protected routes
+// Protected routes (must be before dynamic routes)
+router.get('/seller/my-projects', authenticateToken, isSeller, getSellerProjects);
+
 router.post('/', authenticateToken, isSeller, upload.fields([
   { name: 'images', maxCount: 5 },
   { name: 'files', maxCount: 10 }
 ]), createProject);
 
-router.get('/seller/my-projects', authenticateToken, isSeller, getSellerProjects);
 router.put('/:id', authenticateToken, isSeller, updateProject);
 router.delete('/:id', authenticateToken, isSeller, deleteProject);
+
+// Dynamic routes (must be last)
+router.get('/:id', getProjectById);
 
 module.exports = router;

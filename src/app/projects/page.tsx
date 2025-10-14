@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, Grid, List, TrendingUp, Star } from 'lucide-react';
 import ProjectCard from '@/components/ProjectCard';
 import { featuredProjects, categories, technologies } from '@/data/projects';
+import { projectsApi } from '@/utils/api';
 
 const ProjectsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +14,23 @@ const ProjectsPage = () => {
   const [sortBy, setSortBy] = useState('الأحدث');
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await projectsApi.getAll();
+        setProjects(data);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+        setProjects(featuredProjects);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const priceRanges = [
     'جميع الأسعار',
@@ -31,7 +49,8 @@ const ProjectsPage = () => {
   ];
 
   const filterProjects = () => {
-    let filtered = featuredProjects;
+    const projectsToFilter = projects.length > 0 ? projects : featuredProjects;
+    let filtered = projectsToFilter;
 
     // Search filter
     if (searchQuery) {
@@ -48,19 +67,21 @@ const ProjectsPage = () => {
 
     // Technology filter
     if (selectedTech) {
-      filtered = filtered.filter(project => 
-        project.technologies.includes(selectedTech)
-      );
+      filtered = filtered.filter(project => {
+        const techs = Array.isArray(project.technologies) ? project.technologies : [];
+        return techs.includes(selectedTech);
+      });
     }
 
     // Price range filter
     if (priceRange && priceRange !== 'جميع الأسعار') {
       const [min, max] = priceRange.split(' - ').map(p => parseInt(p.replace(/[,$]/g, '')));
       filtered = filtered.filter(project => {
+        const price = Number(project.price);
         if (max) {
-          return project.price >= min && project.price <= max;
+          return price >= min && price <= max;
         } else {
-          return project.price >= min;
+          return price >= min;
         }
       });
     }
@@ -68,13 +89,17 @@ const ProjectsPage = () => {
     // Sort
     switch (sortBy) {
       case 'الأعلى سعراً':
-        return filtered.sort((a, b) => b.price - a.price);
+        return filtered.sort((a, b) => Number(b.price) - Number(a.price));
       case 'الأقل سعراً':
-        return filtered.sort((a, b) => a.price - b.price);
+        return filtered.sort((a, b) => Number(a.price) - Number(b.price));
       case 'الأعلى تقييماً':
-        return filtered.sort((a, b) => b.rating - a.rating);
+        return filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       case 'الأكثر ربحية':
-        return filtered.sort((a, b) => (b.monthlyRevenue || 0) - (a.monthlyRevenue || 0));
+        return filtered.sort((a, b) => {
+          const aRevenue = Number(a.monthly_revenue || a.monthlyRevenue || 0);
+          const bRevenue = Number(b.monthly_revenue || b.monthlyRevenue || 0);
+          return bRevenue - aRevenue;
+        });
       default:
         return filtered;
     }
