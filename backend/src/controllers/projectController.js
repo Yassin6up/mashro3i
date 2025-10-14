@@ -7,13 +7,27 @@ const createProject = async (req, res) => {
       title,
       description,
       category,
+      project_type,
       price,
       technologies,
       demo_url,
+      video_links,
+      video_source,
       is_profitable,
       revenue_type,
       monthly_revenue
     } = req.body;
+
+    // Validate video links for desktop apps
+    if (project_type === 'desktop_app') {
+      const videoLinksArray = Array.isArray(video_links) ? video_links : (video_links ? [video_links] : []);
+      if (videoLinksArray.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'برامج سطح المكتب تحتاج إلى 6 فيديوهات على الأقل'
+        });
+      }
+    }
 
     // Parse technologies if it's a string
     let techArray = technologies;
@@ -21,14 +35,20 @@ const createProject = async (req, res) => {
       techArray = technologies.split(',').map(t => t.trim());
     }
 
+    // Parse video links if it's a string
+    let videoLinksArray = video_links;
+    if (typeof video_links === 'string') {
+      videoLinksArray = video_links.split(',').map(v => v.trim());
+    }
+
     // Handle multiple file uploads
     const images = req.files?.images?.map(file => `/uploads/${file.filename}`) || [];
     const files = req.files?.files?.map(file => `/uploads/${file.filename}`) || [];
 
     const result = await pool.query(
-      `INSERT INTO projects (seller_id, title, description, category, price, images, files, technologies, demo_url, is_profitable, revenue_type, monthly_revenue)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-      [req.user.id, title, description, category, price, images, files, techArray, demo_url, is_profitable, revenue_type, monthly_revenue]
+      `INSERT INTO projects (seller_id, title, description, category, project_type, price, images, files, technologies, demo_url, video_links, video_source, is_profitable, revenue_type, monthly_revenue)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+      [req.user.id, title, description, category, project_type, price, images, files, techArray, demo_url, videoLinksArray, video_source, is_profitable, revenue_type, monthly_revenue]
     );
 
     res.status(201).json({
