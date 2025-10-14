@@ -10,6 +10,8 @@ import { STORAGE_KEYS } from '@/constants';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<any>;
+  registerSeller: (payload: any) => Promise<any>;
+  registerCustomer: (payload: any) => Promise<any>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -44,12 +46,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user;
   }, []);
 
+  const registerSeller = useCallback(async (payload: any) => {
+    const { user } = await authApi.registerSeller(payload);
+    setUser(user);
+    return user;
+  }, []);
+
+  const registerCustomer = useCallback(async (payload: any) => {
+    const { user } = await authApi.registerCustomer(payload);
+    setUser(user);
+    return user;
+  }, []);
+
   const logout = useCallback(() => {
     authApi.logout();
     setUser(null);
   }, []);
 
-  const value: AuthContextType = useMemo(() => ({ user, login, logout, isLoading }), [user, login, logout, isLoading]);
+  const value: AuthContextType = useMemo(() => ({ user, login, registerSeller, registerCustomer, logout, isLoading }), [user, login, registerSeller, registerCustomer, logout, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

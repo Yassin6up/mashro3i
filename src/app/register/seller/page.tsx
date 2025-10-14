@@ -30,9 +30,11 @@ import {
 import { storage } from '@/utils/helpers';
 import { STORAGE_KEYS, COUNTRIES, PROGRAMMING_SKILLS } from '@/constants';
 import { authApi } from '@/utils/api';
+import { useAuth } from '@/hooks/useAuth';
 
 const SellerRegisterPage = () => {
   const router = useRouter();
+  const { registerSeller } = useAuth();
   const [formData, setFormData] = useState({
     // Personal Info
     name: '',
@@ -114,7 +116,7 @@ const SellerRegisterPage = () => {
     }
     
     try {
-      await authApi.registerSeller({
+      await registerSeller({
         full_name: formData.name,
         phone: formData.phone,
         email: formData.email,

@@ -16,9 +16,11 @@ import {
 } from 'lucide-react';
 import { authApi } from '@/utils/api';
 import { COUNTRIES } from '@/constants';
+import { useAuth } from '@/hooks/useAuth';
 
 const BuyerRegisterPage = () => {
   const router = useRouter();
+  const { registerCustomer } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -101,7 +103,7 @@ const BuyerRegisterPage = () => {
       return;
     }
     try {
-      await authApi.registerCustomer({
+      await registerCustomer({
         full_name: formData.name,
         phone: formData.phone,
         email: formData.email,
