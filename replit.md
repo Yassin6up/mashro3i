@@ -243,6 +243,12 @@ pkill -f "node src/server.js" && pkill -f "next dev"
   - تسجيل الخروج
 - **API Proxy**: تم إعداد Next.js rewrites لتوجيه `/api/*` إلى Backend على Port 3001
 - **ربط تلقائي**: عند إنشاء حساب أو تسجيل دخول، يتم تحديث AuthContext تلقائياً وعرض البروفايل
+- **✅ نظام "تذكرني" (Remember Me)**:
+  - Checkbox في صفحة Login للبقاء مسجل دخول
+  - عند تفعيله: JWT token يستمر 30 يوم
+  - بدون تفعيل: JWT token يستمر 7 أيام
+  - الجلسة محفوظة في localStorage وتعود تلقائياً عند إعادة تحميل الصفحة
+  - Logout ينظف جميع البيانات (token, user, remember_me)
 
 ## آخر تحديث
 تاريخ: 14 أكتوبر 2025
@@ -283,3 +289,8 @@ pkill -f "node src/server.js" && pkill -f "next dev"
    - إضافة معاينة للصورة المرفوعة
    - زر لحذف واستبدال الصورة
    - رسالة تأكيد عند رفع الصورة بنجاح
+8. ✅ **نظام "تذكرني" (Remember Me)**:
+   - إضافة checkbox في صفحة Login
+   - JWT token يستمر 30 يوم عند التفعيل، 7 أيام افتراضياً
+   - حفظ الجلسة في localStorage مع bootstrap تلقائي
+   - Logout ينظف remember_me flag بالإضافة لبقية البيانات
