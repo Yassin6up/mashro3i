@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from '@/constants';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<any>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<any>;
   registerSeller: (payload: any) => Promise<any>;
   registerCustomer: (payload: any) => Promise<any>;
   logout: () => void;
@@ -40,8 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     bootstrap();
   }, [bootstrap]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { user } = await authApi.login(email, password);
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean = false) => {
+    const { user } = await authApi.login(email, password, rememberMe);
     setUser(user);
     return user;
   }, []);

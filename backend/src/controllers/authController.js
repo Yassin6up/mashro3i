@@ -108,7 +108,7 @@ const registerCustomer = async (req, res) => {
 // Login
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     // Find user
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -126,11 +126,12 @@ const login = async (req, res) => {
 
     delete user.password;
 
-    // Generate JWT token
+    // Generate JWT token - عمر أطول عند اختيار "تذكرني"
+    const tokenExpiry = rememberMe ? '30d' : '7d';
     const token = jwt.sign(
       { id: user.id, email: user.email, user_type: user.user_type },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: tokenExpiry }
     );
 
     res.json({

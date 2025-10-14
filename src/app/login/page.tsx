@@ -42,7 +42,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const loggedUser = await login(formData.email, formData.password);
+      const loggedUser = await login(formData.email, formData.password, formData.rememberMe);
       if (loggedUser?.role === 'buyer' || loggedUser?.user_type === 'buyer') {
         router.push('/profile/buyer');
       } else {

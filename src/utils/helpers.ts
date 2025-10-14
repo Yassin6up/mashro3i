@@ -169,6 +169,7 @@ export const authStorage = {
   clear: (): void => {
     storage.remove('auth_token');
     storage.remove('user_data');
+    storage.remove('remember_me');
   }
 };
 

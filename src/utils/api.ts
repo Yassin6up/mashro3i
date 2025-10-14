@@ -70,17 +70,25 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, rememberMe: boolean = false) => {
     type LoginResponse = { success: boolean; message?: string; data?: { user: any; token: string } }
     const resp = await request<LoginResponse>('/auth/login', {
       method: 'POST',
-      body: { email, password }
+      body: { email, password, rememberMe }
     })
 
     if (!resp?.success || !resp?.data?.token) throw new Error(resp?.message || 'Login failed')
 
     authStorage.setToken(resp.data.token)
     storage.set(STORAGE_KEYS.USER_DATA, resp.data.user)
+    
+    // حفظ حالة "تذكرني" للحفاظ على الجلسة
+    if (rememberMe) {
+      storage.set('remember_me', true)
+    } else {
+      storage.remove('remember_me')
+    }
+    
     return resp.data
   },
 
