@@ -33,6 +33,7 @@ const HomePage = () => {
     const fetchProjects = async () => {
       try {
         const data = await projectsApi.getAll();
+        console.log('Homepage projects loaded:', data.length, 'projects');
         setProjects(data);
       } catch (error) {
         console.error('Failed to load projects:', error);
