@@ -174,5 +174,63 @@ export const authApi = {
   }
 }
 
+export const projectsApi = {
+  create: async (formData: FormData) => {
+    type CreateProjectResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<CreateProjectResponse>('/projects', {
+      method: 'POST',
+      isFormData: true,
+      body: formData,
+      auth: true
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to create project')
+    return resp.data
+  },
+
+  getAll: async (filters?: { category?: string; min_price?: number; max_price?: number; is_profitable?: boolean; search?: string }) => {
+    const params = new URLSearchParams()
+    if (filters?.category) params.append('category', filters.category)
+    if (filters?.min_price) params.append('min_price', filters.min_price.toString())
+    if (filters?.max_price) params.append('max_price', filters.max_price.toString())
+    if (filters?.is_profitable !== undefined) params.append('is_profitable', filters.is_profitable.toString())
+    if (filters?.search) params.append('search', filters.search)
+    
+    const queryString = params.toString() ? `?${params.toString()}` : ''
+    type ProjectsResponse = { success: boolean; data: any[] }
+    const resp = await request<ProjectsResponse>(`/projects${queryString}`)
+    if (!resp?.success) throw new Error('Failed to load projects')
+    return resp.data
+  },
+
+  getById: async (id: string | number) => {
+    type ProjectResponse = { success: boolean; data: any }
+    const resp = await request<ProjectResponse>(`/projects/${id}`)
+    if (!resp?.success) throw new Error('Failed to load project')
+    return resp.data
+  },
+
+  update: async (id: string | number, formData: FormData) => {
+    type UpdateProjectResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<UpdateProjectResponse>(`/projects/${id}`, {
+      method: 'PUT',
+      isFormData: true,
+      body: formData,
+      auth: true
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to update project')
+    return resp.data
+  },
+
+  delete: async (id: string | number) => {
+    type DeleteProjectResponse = { success: boolean; message?: string }
+    const resp = await request<DeleteProjectResponse>(`/projects/${id}`, {
+      method: 'DELETE',
+      auth: true
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to delete project')
+    return resp
+  }
+}
+
 export type { RequestOptions }
 
