@@ -2,16 +2,21 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Search, User, Menu, X, Bell, Home, Grid, TrendingUp, Building2, FolderOpen, Receipt } from 'lucide-react';
+import { Search, User, Menu, X, Bell, Home, Grid, TrendingUp, Building2, LogOut, Settings } from 'lucide-react';
 import NotificationCenter from './notifications/NotificationCenter';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/hooks/useAuth';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { getUnreadCount } = useNotifications();
+  const { user, logout, isLoading } = useAuth();
+  const router = useRouter();
 
   const navLinks = [
     { href: '/', label: 'الرئيسية', icon: Home },
@@ -57,43 +62,98 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-3 space-x-reverse">
-            {/* Notification Button */}
-            {/* <button 
-              onClick={() => setIsNotificationOpen(true)}
-              className="relative p-3 text-slate-600 hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-blue-50/80 backdrop-blur-sm group shadow-sm hover:shadow-md"
-            >
-              <Bell className="h-6 w-6 transition-all duration-300 group-hover:scale-110" />
-              {getUnreadCount() > 0 && (
-                <div className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse shadow-lg">
-                  {getUnreadCount() > 99 ? '99+' : getUnreadCount()}
+            {!isLoading && user ? (
+              <>
+                {/* Notification Button */}
+                <button 
+                  onClick={() => setIsNotificationOpen(true)}
+                  className="relative p-3 text-slate-600 hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-blue-50/80 backdrop-blur-sm group shadow-sm hover:shadow-md"
+                >
+                  <Bell className="h-6 w-6 transition-all duration-300 group-hover:scale-110" />
+                  {getUnreadCount() > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse shadow-lg">
+                      {getUnreadCount() > 99 ? '99+' : getUnreadCount()}
+                    </div>
+                  )}
+                </button>
+
+                {/* Profile Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    className="flex items-center gap-2 p-1 pr-3 rounded-full bg-gradient-to-r from-cyan-50 to-blue-50 hover:from-cyan-100 hover:to-blue-100 transition-all duration-300 border-2 border-cyan-200 hover:border-cyan-300 shadow-lg hover:shadow-xl"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold">
+                      {user.profile_picture ? (
+                        <Image 
+                          src={user.profile_picture} 
+                          alt={user.full_name} 
+                          width={40} 
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{user.full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                      )}
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700">{user.full_name}</span>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isProfileMenuOpen && (
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50">
+                      <Link
+                        href={user.user_type === 'seller' ? '/profile/seller' : '/profile/buyer'}
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+                      >
+                        <Settings className="w-5 h-5 text-slate-600" />
+                        <span className="text-slate-700 font-medium">الملف الشخصي</span>
+                      </Link>
+                      <hr className="my-1 border-slate-200" />
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsProfileMenuOpen(false);
+                          router.push('/');
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-right"
+                      >
+                        <LogOut className="w-5 h-5 text-red-600" />
+                        <span className="text-red-600 font-medium">تسجيل الخروج</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </button> */}
-            
-            {/* تسجيل الدخول - Premium Design */}
-            <Link 
-              href="/login" 
-              className="group relative px-4 py-2 bg-gradient-to-r from-slate-50 to-white border-2 border-cyan-200 text-cyan-700 font-bold rounded-full hover:from-cyan-50 hover:to-cyan-100 hover:border-cyan-300 hover:text-cyan-800 transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 text-sm overflow-hidden shadow-lg"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-cyan-400/5 to-cyan-300/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-100/0 via-cyan-100/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span className="relative z-10 flex items-center gap-2.5 font-semibold">
-                  تسجيل الدخول
-                </span>
-            </Link>
-            
-            {/* إنشاء حساب - Premium Design */}
-            <Link 
-              href="/register" 
-              className="group relative px-4 py-2 text-white font-bold rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105 active:scale-95 text-sm overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #7EE7FC 0%, #5DD3F0 100%)' }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-cyan-300/20 to-cyan-200/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span className="relative z-10 flex items-center gap-2.5 font-semibold">
-                  إنشاء حساب
-                </span>
-            </Link>
+              </>
+            ) : (
+              <>
+                {/* تسجيل الدخول - Premium Design */}
+                <Link 
+                  href="/login" 
+                  className="group relative px-4 py-2 bg-gradient-to-r from-slate-50 to-white border-2 border-cyan-200 text-cyan-700 font-bold rounded-full hover:from-cyan-50 hover:to-cyan-100 hover:border-cyan-300 hover:text-cyan-800 transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 text-sm overflow-hidden shadow-lg"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-cyan-400/5 to-cyan-300/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-100/0 via-cyan-100/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <span className="relative z-10 flex items-center gap-2.5 font-semibold">
+                      تسجيل الدخول
+                    </span>
+                </Link>
+                
+                {/* إنشاء حساب - Premium Design */}
+                <Link 
+                  href="/register" 
+                  className="group relative px-4 py-2 text-white font-bold rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105 active:scale-95 text-sm overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg, #7EE7FC 0%, #5DD3F0 100%)' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-cyan-300/20 to-cyan-200/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <span className="relative z-10 flex items-center gap-2.5 font-semibold">
+                      إنشاء حساب
+                    </span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}

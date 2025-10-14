@@ -2,16 +2,18 @@
 // USER TYPES
 // =============================================================================
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  full_name: string;
   email: string;
   phone?: string;
   country?: string;
-  city?: string;
-  avatar?: string;
-  role: 'buyer' | 'seller';
-  joinDate: string;
-  isVerified: boolean;
+  profile_picture?: string | null;
+  user_type: 'buyer' | 'seller';
+  created_at?: string;
+  is_verified?: boolean;
+  self_description?: string;
+  programming_skills?: string[];
+  programming_interests?: string[];
 }
 
 export interface Seller extends User {
