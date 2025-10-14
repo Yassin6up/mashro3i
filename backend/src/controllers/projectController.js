@@ -18,17 +18,7 @@ const createProject = async (req, res) => {
       monthly_revenue
     } = req.body;
 
-    // Validate video links for desktop apps
-    const isDesktopApp = project_type === 'desktop_app' || project_type === 'تطبيقات سطح المكتب';
-    if (isDesktopApp) {
-      const videoLinksArray = Array.isArray(video_links) ? video_links : (video_links ? [video_links] : []);
-      if (videoLinksArray.length < 6) {
-        return res.status(400).json({
-          success: false,
-          message: 'برامج سطح المكتب تحتاج إلى 6 فيديوهات على الأقل'
-        });
-      }
-    }
+    // Video links are now optional - tutorial videos can be sent after purchase
 
     // Parse technologies if it's a string
     let techArray = technologies;

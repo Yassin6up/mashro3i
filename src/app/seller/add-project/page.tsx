@@ -108,12 +108,6 @@ const CreateProjectPage = () => {
     setError('');
 
     try {
-      // Validation for desktop apps
-      const isDesktopApp = projectForm.projectType === 'تطبيقات سطح المكتب';
-      if (isDesktopApp && projectForm.videoLinks.length < 6) {
-        throw new Error('برامج سطح المكتب تحتاج إلى 6 فيديوهات على الأقل');
-      }
-
       // Build FormData
       const formData = new FormData();
       formData.append('title', projectForm.title);

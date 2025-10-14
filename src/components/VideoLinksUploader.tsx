@@ -19,8 +19,6 @@ export default function VideoLinksUploader({
   onSourceChange
 }: VideoLinksUploaderProps) {
   const [newLink, setNewLink] = useState('');
-  const isDesktopApp = projectType === 'تطبيقات سطح المكتب';
-  const minVideos = isDesktopApp ? 6 : 0;
 
   const addLink = () => {
     if (newLink.trim() && videoSource) {
@@ -58,19 +56,27 @@ export default function VideoLinksUploader({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
           <Youtube className="w-6 h-6 text-red-600" />
-          فيديوهات توضيحية للمشروع
+          فيديو توضيحي للمشروع (اختياري)
         </h2>
-        {isDesktopApp && (
-          <span className="text-sm font-medium text-red-600 bg-red-50 px-3 py-1 rounded-full">
-            مطلوب 6 فيديوهات على الأقل
-          </span>
-        )}
       </div>
 
-      {/* Source Selection */}
+      {/* Info Message */}
+      <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-blue-800">
+            أضف فيديو واحد من YouTube يظهر في كارت عرض المشروع
+          </p>
+          <p className="text-sm text-blue-700 mt-1">
+            • الفيديوهات التوضيحية الإضافية (للبرامج) تُرسل للمشتري بعد إتمام الشراء
+          </p>
+        </div>
+      </div>
+
+      {/* Source Selection - YouTube Only */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">
-          اختر مصدر الفيديوهات *
+          اختر مصدر الفيديو
         </label>
         <div className="grid grid-cols-2 gap-4">
           <button
@@ -127,7 +133,7 @@ export default function VideoLinksUploader({
       {videoSource && (
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">
-            أضف رابط الفيديو
+            أضف رابط الفيديو (فيديو واحد فقط سيظهر في الكارت)
           </label>
           <div className="flex gap-2">
             <input
@@ -141,12 +147,22 @@ export default function VideoLinksUploader({
             <button
               type="button"
               onClick={addLink}
-              className="px-6 py-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center gap-2"
+              disabled={videoLinks.length >= 1}
+              className={`px-6 py-3 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+                videoLinks.length >= 1
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-primary-500 text-white hover:bg-primary-600'
+              }`}
             >
               <Plus className="w-5 h-5" />
               إضافة
             </button>
           </div>
+          {videoLinks.length >= 1 && (
+            <p className="text-sm text-amber-600">
+              ✓ تم إضافة الفيديو - يمكنك استبداله بحذف الحالي وإضافة آخر
+            </p>
+          )}
         </div>
       )}
 
@@ -154,7 +170,7 @@ export default function VideoLinksUploader({
       {videoLinks.length > 0 && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            الفيديوهات المضافة ({videoLinks.length} {isDesktopApp && `/ ${minVideos}`})
+            الفيديو المضاف ({videoLinks.length})
           </label>
           <div className="space-y-2">
             {videoLinks.map((link, index) => (
@@ -183,21 +199,6 @@ export default function VideoLinksUploader({
                 </button>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Desktop App Warning */}
-      {isDesktopApp && videoLinks.length < minVideos && (
-        <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-amber-800">
-              برامج سطح المكتب تحتاج إلى {minVideos} فيديوهات على الأقل
-            </p>
-            <p className="text-sm text-amber-700 mt-1">
-              يرجى إضافة {minVideos - videoLinks.length} فيديوهات أخرى توضح طريقة تشغيل البرنامج واستخدامه
-            </p>
           </div>
         </div>
       )}
