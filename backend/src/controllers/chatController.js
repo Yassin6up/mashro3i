@@ -10,6 +10,7 @@ const sendMessage = async (req, res) => {
     let file_path = null;
     let file_size = null;
     let file_type = null;
+    let file_name = null;
     let message_text = message;
 
     // Check if file was uploaded
@@ -17,6 +18,7 @@ const sendMessage = async (req, res) => {
       file_path = `/uploads/chat/${req.file.filename}`;
       file_size = req.file.size;
       file_type = req.file.mimetype;
+      file_name = req.file.originalname;
       
       // Determine message type based on file mimetype
       if (req.file.mimetype.startsWith('image/')) {
@@ -32,9 +34,9 @@ const sendMessage = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO messages (sender_id, receiver_id, transaction_id, message, message_type, file_path, file_size, file_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [sender_id, receiver_id, transaction_id, message_text, message_type, file_path, file_size, file_type]
+      `INSERT INTO messages (sender_id, receiver_id, transaction_id, message, message_type, file_path, file_size, file_type, file_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [sender_id, receiver_id, transaction_id, message_text, message_type, file_path, file_size, file_type, file_name]
     );
 
     // Create notification for receiver

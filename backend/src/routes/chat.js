@@ -10,7 +10,7 @@ const {
 } = require('../controllers/chatController');
 
 // All routes are protected
-router.post('/send', authenticateToken, chatUpload.single('file'), sendMessage);
+router.post('/send', authenticateToken, chatUpload, sendMessage);
 router.get('/conversations', authenticateToken, getConversations);
 router.get('/unread-count', authenticateToken, getUnreadCount);
 router.get('/messages/:user_id', authenticateToken, getMessages);
