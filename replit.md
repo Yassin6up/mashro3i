@@ -1,296 +1,41 @@
-# منصة المنتجات الرقمية - Digital Products Marketplace
+# Digital Products Marketplace
 
-## نظرة عامة
-منصة متكاملة لبيع وشراء المشاريع الرقمية مع نظام Escrow آمن وخصم 15% للمنصة.
+## Overview
+A comprehensive platform for buying and selling digital projects with a secure Escrow system and a 15% platform commission. The project aims to provide a reliable marketplace for digital assets, ensuring secure transactions and fostering direct communication between buyers and sellers.
 
-## البنية التقنية
+## User Preferences
+I prefer detailed explanations.
+I want iterative development.
+Ask before making major changes.
+Do not make changes to the folder `Z`.
+Do not make changes to the file `Y`.
 
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
+## System Architecture
+
+### UI/UX Decisions
+The frontend is built with Next.js 14 (App Router) and styled using Tailwind CSS, focusing on a responsive and intuitive user experience. The platform includes dynamic navigation, user profile management, and interactive forms for project submission and offer creation.
+
+### Technical Implementations
+The platform features a robust authentication system using JWT, an Escrow system for secure transactions with a 15% platform fee and a 7-day review period, and flexible payment methods adaptable by country. Key features include:
+- **Authentication**: JWT-based login/registration for sellers and buyers, secure API access, and a "Remember Me" option for persistent sessions.
+- **Project Management**: Sellers can upload projects with images and video links (YouTube/Google Drive), while buyers can browse, search, and view project details.
+- **Transaction System**: Tracks various transaction states (pending, escrow_held, completed, refunded, disputed) and manages platform earnings.
+- **Escrow System**: Securely holds funds, automatically calculates the 15% platform commission, and supports a 7-day review period before releasing funds.
+- **Payment & Withdrawal**: Country-specific payment methods (e.g., Vodafone Cash for Egypt, bank cards for other regions) and secure user payment preference storage.
+- **Communication**: Real-time notification system and an integrated chat feature for direct buyer-seller interaction.
+- **Desktop Software Requirements**: Projects can include up to 5 images and 1 optional YouTube video for display; additional instructional videos are sent post-purchase.
+
+### System Design Choices
+The architecture separates frontend and backend concerns, using Next.js for the client and Express.js for the server. Data is stored in a PostgreSQL database. The system emphasizes security with bcrypt for password hashing, CORS protection, and secure file uploads.
+
+## External Dependencies
+
+- **Frontend Framework**: Next.js 14
 - **Styling**: Tailwind CSS
-- **Port**: 5000
-- **URL**: http://localhost:5000
-
-### Backend
-- **Framework**: Express.js
-- **Language**: Node.js
+- **Backend Framework**: Express.js
 - **Database**: PostgreSQL (Neon)
-- **Port**: 3001
-- **API Base**: http://localhost:3001/api
-
-## المزايا الرئيسية
-
-### 1. نظام المصادقة
-- تسجيل دخول/إنشاء حساب للبائع والمشتري
-- JWT Authentication
-- حماية الصفحات والـ APIs
-
-### 2. نظام المشاريع
-- رفع المشاريع (للبائعين)
-- تصفح المشاريع
-- البحث والفلترة
-- تفاصيل المشروع
-
-### 3. نظام Escrow (الضمان)
-- حجز الأموال بشكل آمن
-- خصم 15% للمنصة تلقائياً
-- فترة مراجعة 7 أيام
-- إمكانية الدفع بالأقساط
-- نظام استرداد الأموال
-
-### 4. نظام المعاملات
-- تتبع المعاملات
-- حالات مختلفة (pending, escrow_held, completed, refunded, disputed)
-- سجل المعاملات للبائع والمشتري
-- حساب أرباح المنصة
-
-### 5. نظام الإشعارات
-- إشعارات الوقت الفعلي
-- أنواع مختلفة من الإشعارات
-- عداد الإشعارات غير المقروءة
-
-### 6. نظام الدردشة
-- تواصل مباشر بين البائع والمشتري
-- تتبع الرسائل
-- عداد الرسائل غير المقروءة
-
-### 7. نظام طرق الدفع حسب الدولة
-- **مصر**: فودافون كاش، إتصالات كاش، أورانج كاش
-- **باقي الدول**: بطاقة بنكية (Visa, Mastercard)
-- نظام موحد للدفع والسحب
-- حفظ تفضيلات المستخدم مع الحماية الكاملة
-
-### 8. متطلبات برامج سطح المكتب
-- يجب تقديم 6 فيديوهات على الأقل
-- دعم روابط من YouTube أو Google Drive
-- التحقق التلقائي من عدد الفيديوهات
-- واجهة سهلة لرفع الروابط
-
-## قاعدة البيانات
-
-### الجداول الرئيسية:
-1. **users** - المستخدمين (بائعين ومشترين) + حقل الدولة (country)
-2. **projects** - المشاريع المعروضة + نوع المشروع + روابط الفيديوهات
-3. **transactions** - المعاملات
-4. **escrow** - حفظ الأموال
-5. **installments** - الأقساط
-6. **notifications** - الإشعارات
-7. **messages** - الرسائل
-8. **platform_earnings** - أرباح المنصة (15%)
-9. **payment_methods** - طرق الدفع المتاحة حسب الدولة
-10. **withdrawal_methods** - طرق سحب الأرباح للبائعين
-11. **user_payment_preferences** - تفضيلات الدفع/السحب للمستخدمين
-
-## API Endpoints
-
-### Authentication (`/api/auth`)
-- `POST /register/seller` - تسجيل بائع
-- `POST /register/customer` - تسجيل مشتري
-- `POST /login` - تسجيل دخول
-- `GET /profile` - الملف الشخصي
-- `PUT /profile` - تحديث الملف الشخصي
-
-### Projects (`/api/projects`)
-- `GET /` - جميع المشاريع
-- `GET /:id` - تفاصيل مشروع
-- `POST /` - إنشاء مشروع (بائع فقط)
-- `PUT /:id` - تحديث مشروع (بائع فقط)
-- `DELETE /:id` - حذف مشروع (بائع فقط)
-
-### Transactions (`/api/transactions`)
-- `POST /` - إنشاء معاملة (مشتري فقط)
-- `GET /` - معاملات المستخدم
-- `GET /:id` - تفاصيل معاملة
-- `POST /:id/release` - إطلاق الأموال من Escrow
-- `POST /:id/refund` - طلب استرداد
-- `GET /platform/earnings` - أرباح المنصة
-
-### Notifications (`/api/notifications`)
-- `GET /` - الإشعارات
-- `GET /unread-count` - عدد غير المقروءة
-- `PATCH /:id/read` - تحديد كمقروء
-- `DELETE /:id` - حذف إشعار
-
-### Chat (`/api/chat`)
-- `POST /send` - إرسال رسالة
-- `GET /conversations` - المحادثات
-- `GET /:user_id` - رسائل مع مستخدم
-- `GET /unread-count` - عدد غير المقروءة
-
-### Payment (`/api/payment`)
-- `GET /payment-methods?country=XX` - طرق الدفع حسب الدولة
-- `GET /withdrawal-methods?country=XX` - طرق السحب حسب الدولة
-- `POST /user-payment-preference` - حفظ تفضيلات الدفع (محمي)
-- `GET /user-payment-preference/:userId` - الحصول على تفضيلات الدفع (محمي)
-
-## نظام Escrow والعمولة
-
-### آلية العمل:
-1. المشتري يشتري مشروع
-2. يتم حجز المبلغ الكامل في Escrow
-3. يتم حساب عمولة المنصة (15%) تلقائياً
-4. المبلغ المتبقي (85%) محفوظ للبائع
-5. فترة مراجعة 7 أيام
-6. بعد الموافقة أو انتهاء المدة:
-   - يتم تحويل 85% للبائع
-   - يتم تحويل 15% لحساب المنصة
-
-### مثال حسابي:
-- سعر المشروع: 1000$
-- عمولة المنصة (15%): 150$
-- مبلغ البائع (85%): 850$
-
-## متغيرات البيئة
-
-### Backend (backend/.env)
-```
-PORT=3001
-JWT_SECRET=your_jwt_secret_key
-PLATFORM_FEE_PERCENTAGE=15
-FRONTEND_URL=http://localhost:5000
-```
-
-### Frontend
-```
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-```
-
-## التشغيل
-
-### Development
-```bash
-# Frontend (Port 5000)
-npm run dev
-
-# Backend (Port 3001)
-cd backend && npm start
-```
-
-### الوصول للمنصة
-- Frontend: http://localhost:5000
-- Backend API: http://localhost:3001/api
-- API Health Check: http://localhost:3001/api/health
-
-## الأمان
-- JWT للمصادقة
-- bcrypt لتشفير كلمات المرور
-- CORS محدد للـ frontend
-- حماية المسارات حسب نوع المستخدم
-- رفع الملفات آمن مع Multer
-- ✅ حماية endpoints طرق الدفع بالـ authentication
-- ✅ التحقق من صلاحية الوصول للبيانات الشخصية
-
-## ملاحظات مهمة
-- قاعدة البيانات: PostgreSQL (Neon hosted on Replit)
-- رفع الملفات: يتم حفظها في `/backend/uploads`
-- العمولة: 15% ثابتة (قابلة للتعديل في .env)
-- فترة المراجعة: 7 أيام افتراضياً
-- طرق الدفع: تختلف حسب الدولة (مصر: محافظ موبايل، باقي الدول: بطاقات بنكية)
-- برامج سطح المكتب: يجب أن تحتوي على 6 فيديوهات على الأقل
-
-## التحديثات المستقبلية
-- [ ] بوابات دفع حقيقية (Stripe, PayPal)
-- [ ] نظام التقييمات والمراجعات
-- [ ] إحصائيات ولوحة تحكم للإدارة
-- [ ] نظام الاشتراكات للبائعين
-- [ ] تطبيق موبايل
-
-## التحديثات الأخيرة (14 أكتوبر 2025)
-
-### ✅ طرق الدفع حسب الدولة
-- إضافة نظام طرق الدفع المتنوعة حسب الدولة
-- مصر: فودافون كاش، إتصالات كاش، أورانج كاش
-- باقي الدول: بطاقة بنكية
-- نظام موحد للدفع والسحب
-- حماية كاملة لـ endpoints الدفع
-
-### ✅ نظام الفيديوهات التوضيحية
-- إضافة فيديو YouTube واحد (اختياري) يظهر في كارت المشروع
-- دعم YouTube و Google Drive
-- الفيديوهات الإضافية (للبرامج) تُرسل للمشتري بعد إتمام الشراء
-- لا يوجد حد أدنى إجباري للفيديوهات عند رفع المشروع
-
-### ✅ إصلاحات الأمان
-- إضافة authentication لـ endpoints طرق الدفع
-- التحقق من صلاحية الوصول للبيانات الشخصية
-- إصلاح validation لنوع المشروع (دعم العربية والإنجليزية)
-
-## المشاكل الشائعة وحلولها
-
-### ❌ خطأ "Failed to connect to API"
-**السبب**: Backend أو Frontend لا يعمل بسبب Port مستخدم
-**الحل**:
-```bash
-# إيقاف العمليات القديمة
-pkill -f "node src/server.js" && pkill -f "next dev"
-
-# إعادة تشغيل الـ workflows
-# يتم ذلك تلقائياً من واجهة Replit
-```
-
-### ✅ نظام المصادقة والبروفايل - تم إصلاحه بالكامل
-- **AuthContext**: نظام متكامل لإدارة حالة المستخدم مع دوال:
-  - `login()` - تسجيل الدخول
-  - `registerSeller()` - تسجيل البائع
-  - `registerCustomer()` - تسجيل المشتري
-  - `logout()` - تسجيل الخروج
-- **Navbar الديناميكي**: 
-  - ✅ يعرض أزرار "تسجيل الدخول" و "إنشاء حساب" عند عدم التسجيل
-  - ✅ يعرض صورة البروفايل/الحرف الأول + اسم المستخدم فوراً بعد التسجيل أو الدخول
-- **قائمة البروفايل**: تظهر عند الضغط على صورة البروفايل مع خيارات:
-  - الملف الشخصي
-  - تسجيل الخروج
-- **API Proxy**: تم إعداد Next.js rewrites لتوجيه `/api/*` إلى Backend على Port 3001
-- **ربط تلقائي**: عند إنشاء حساب أو تسجيل دخول، يتم تحديث AuthContext تلقائياً وعرض البروفايل
-- **✅ نظام "تذكرني" (Remember Me)**:
-  - Checkbox في صفحة Login للبقاء مسجل دخول
-  - عند تفعيله: JWT token يستمر 30 يوم
-  - بدون تفعيل: JWT token يستمر 7 أيام
-  - الجلسة محفوظة في localStorage وتعود تلقائياً عند إعادة تحميل الصفحة
-  - Logout ينظف جميع البيانات (token, user, remember_me)
-
-## آخر تحديث
-تاريخ: 14 أكتوبر 2025
-الحالة: ✅ جاهز للاستخدام - تم إضافة ميزات الدفع ومتطلبات برامج سطح المكتب
-
-## تحديثات اليوم (14 أكتوبر 2025)
-
-### ✅ نظام رفع المشاريع - تم تطبيقه بالكامل
-- **صفحة إنشاء المشروع (`/seller/add-project`):**
-  - ✅ رفع الصور (حتى 5 صور)
-  - ✅ رفع فيديو YouTube واحد (اختياري) يظهر في كارت المشروع
-  - ✅ الفيديوهات التوضيحية الإضافية تُرسل للمشتري بعد الشراء
-  - ✅ لا يوجد حد أدنى إجباري للفيديوهات
-  - ✅ إدخال جميع تفاصيل المشروع
-  - ✅ اختيار التقنيات المستخدمة
-  - ✅ معلومات الأرباح (اختياري)
-- **API Integration:**
-  - ✅ ربط كامل مع Backend API
-  - ✅ حفظ المشروع في قاعدة البيانات
-  - ✅ رفع الملفات على السيرفر
-  - ✅ التحقق من صحة البيانات
-  - ✅ إصلاح خطأ `project_type` في قاعدة البيانات
-- **نظام حفظ البيانات:**
-  - ✅ بيانات المستخدم محفوظة في localStorage
-  - ✅ AuthContext يحفظ حالة المستخدم
-  - ✅ لا حاجة لإعادة إدخال البيانات
-
-### 🔧 إصلاحات تمت في هذه الجلسة:
-1. ✅ إضافة عمود `project_type` لقاعدة البيانات
-2. ✅ إضافة عمودي `video_links` و `video_source` لجدول projects
-3. ✅ إزالة متطلب 6 فيديوهات للـ Desktop Apps
-4. ✅ تحديث نظام الفيديوهات:
-   - فيديو واحد فقط (اختياري) للعرض في كارت المشروع
-   - الفيديوهات الإضافية للبرامج تُرسل بعد الشراء
-5. ✅ إصلاح API لرفع المشاريع
-6. ✅ تحديث واجهة VideoLinksUploader
-7. ✅ إصلاح رفع صورة الملف الشخصي في صفحة التسجيل:
-   - إضافة معاينة للصورة المرفوعة
-   - زر لحذف واستبدال الصورة
-   - رسالة تأكيد عند رفع الصورة بنجاح
-8. ✅ **نظام "تذكرني" (Remember Me)**:
-   - إضافة checkbox في صفحة Login
-   - JWT token يستمر 30 يوم عند التفعيل، 7 أيام افتراضياً
-   - حفظ الجلسة في localStorage مع bootstrap تلقائي
-   - Logout ينظف remember_me flag بالإضافة لبقية البيانات
+- **Authentication**: JWT (JSON Web Tokens)
+- **Password Hashing**: bcrypt
+- **File Uploads**: Multer
+- **Video Hosting**: YouTube, Google Drive (for linking)
+- **Payment Gateways**: (Future integration planned for Stripe, PayPal)

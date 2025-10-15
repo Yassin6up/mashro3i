@@ -1,29 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { 
-  Star, 
-  TrendingUp, 
-  CheckCircle, 
-  DollarSign, 
-  Eye, 
-  ExternalLink, 
-  MessageCircle,
-  Heart,
-  Share2,
   ChevronLeft,
   ChevronRight,
   Play,
-  BarChart3,
-  Globe,
-  Code,
+  ExternalLink,
+  MessageCircle,
+  Heart,
+  Share2,
   Shield,
   Loader2,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react';
-import { projectsApi } from '@/utils/api';
 
 interface ProjectDetailPageProps {
   params: { id: string };
@@ -42,25 +33,49 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
   });
 
   useEffect(() => {
-    let isMounted = true;
-    
-    projectsApi.getById(params.id)
-      .then(data => {
-        if (isMounted) {
-          setProject(data);
-          setLoading(false);
+    const loadProject = async () => {
+      try {
+        console.log('Starting to load project:', params.id);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch(`/api/projects/${params.id}`, {
+          signal: controller.signal,
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('Response received:', response.status);
+        
+        if (!response.ok) {
+          throw new Error('فشل تحميل المشروع');
         }
-      })
-      .catch(err => {
-        if (isMounted) {
-          setError(err.message || 'فشل تحميل المشروع');
-          setLoading(false);
+        
+        const json = await response.json();
+        console.log('Project loaded successfully:', json);
+        
+        if (json.success && json.data) {
+          setProject(json.data);
+        } else {
+          throw new Error('بيانات المشروع غير صحيحة');
         }
-      });
-      
-    return () => {
-      isMounted = false;
+      } catch (err: any) {
+        console.error('Error loading project:', err);
+        if (err.name === 'AbortError') {
+          setError('انتهت مهلة تحميل المشروع. يرجى المحاولة مرة أخرى.');
+        } else {
+          setError(err.message || 'حدث خطأ في تحميل المشروع');
+        }
+      } finally {
+        setLoading(false);
+      }
     };
+
+    loadProject();
   }, [params.id]);
 
   const handleSendCustomOffer = async (e: React.FormEvent) => {
@@ -97,13 +112,9 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
     }).format(price);
   };
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('ar-SA').format(num);
-  };
-
   const API_URL = 'http://localhost:3001';
-  const galleryImages = project?.images?.map((img: string) => `${API_URL}${img}`) || [];
-  const videoLinks = project?.video_links || [];
+  const galleryImages = project.images?.map((img: string) => `${API_URL}${img}`) || [];
+  const videoLinks = project.video_links || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -145,11 +156,9 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
               {galleryImages.length > 0 && (
                 <>
                   <div className="relative bg-gray-100 rounded-3xl overflow-hidden">
-                    <Image
+                    <img
                       src={galleryImages[currentImageIndex]}
                       alt={project.title}
-                      width={800}
-                      height={450}
                       className="w-full h-80 md:h-[500px] object-cover"
                     />
                     {galleryImages.length > 1 && (
@@ -182,11 +191,9 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                               : 'hover:shadow-md'
                           }`}
                         >
-                          <Image
+                          <img
                             src={image}
                             alt=""
-                            width={80}
-                            height={60}
                             className="w-full h-full object-cover"
                           />
                         </button>
@@ -224,14 +231,14 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
           <div className="lg:w-1/4">
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-6">
               <div className="text-3xl font-bold text-blue-600 mb-2">
-                {formatPrice(project.price)}
+                {formatPrice(parseFloat(project.price))}
               </div>
               {project.monthly_revenue && (
                 <div className="bg-green-50 border border-green-200 rounded-3xl p-3 mb-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-green-800">العائد الشهري</span>
                     <span className="text-green-700 font-bold">
-                      {formatPrice(project.monthly_revenue)}/شهر
+                      {formatPrice(parseFloat(project.monthly_revenue))}/شهر
                     </span>
                   </div>
                 </div>
@@ -278,11 +285,9 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
             {/* Seller Info */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Image
+                <img
                   src={project.seller_picture ? `${API_URL}${project.seller_picture}` : '/logo.png'}
                   alt={project.seller_name || 'البائع'}
-                  width={50}
-                  height={50}
                   className="w-12 h-12 rounded-full"
                 />
                 <div>
@@ -314,30 +319,6 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
         {/* Main Content Area */}
         <div className="lg:flex gap-8">
           <div className="lg:flex-1">
-            <div className="mb-8">
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3">
-                <div className="flex flex-wrap gap-1">
-                  {[
-                    { id: 'overview', label: 'نظرة عامة', icon: Globe },
-                    { id: 'tech', label: 'التقنيات', icon: Code },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-4 py-3 rounded-3xl font-medium transition-all duration-200 flex items-center gap-2 ${
-                        activeTab === tab.id
-                          ? 'bg-[#7EE7FC] text-white shadow-md'
-                          : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                      }`}
-                    >
-                      <tab.icon className="w-4 h-4" />
-                      <span className="whitespace-nowrap">{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               {activeTab === 'overview' && (
                 <div>
@@ -349,27 +330,28 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                         <h4 className="font-bold text-orange-800 mb-2">معلومات الربحية</h4>
                         <p className="text-gray-800">
                           {project.revenue_type && `نوع العائد: ${project.revenue_type}`}
-                          {project.monthly_revenue && ` • العائد الشهري: ${formatPrice(project.monthly_revenue)}`}
+                          {project.monthly_revenue && ` • العائد الشهري: ${formatPrice(parseFloat(project.monthly_revenue))}`}
                         </p>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {activeTab === 'tech' && (
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">التقنيات المستخدمة</h3>
-                  <div className="flex flex-wrap gap-3">
-                    {project.technologies?.map((tech: string, index: number) => (
-                      <span 
-                        key={index}
-                        className="px-4 py-2 bg-blue-100 text-blue-800 rounded-3xl font-medium"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
+                  
+                  {/* Technologies */}
+                  {project.technologies && project.technologies.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-bold text-gray-900 mb-3">التقنيات المستخدمة</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {project.technologies.map((tech: string, index: number) => (
+                          <span 
+                            key={index}
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
