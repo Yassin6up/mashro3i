@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import TransactionDashboard from '@/components/escrow/TransactionDashboard';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   User, 
   Mail, 
@@ -65,24 +66,26 @@ import {
 } from 'lucide-react';
 
 const BuyerProfilePage = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  
   const [profileData, setProfileData] = useState({
-    name: 'أحمد محمد',
-    email: 'ahmed@example.com',
-    phone: '+966 50 123 4567',
-    country: 'المملكة العربية السعودية',
-    city: 'الرياض',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    joinDate: '2024-01-15',
-    totalPurchases: 12,
-    totalSpent: 45000,
-    favoriteProjects: 8,
-    membershipLevel: 'ذهبي',
-    rating: 4.9,
+    name: user?.full_name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    country: user?.country || '',
+    city: '',
+    avatar: user?.profile_picture ? `http://localhost:3001${user.profile_picture}` : '/logo.png',
+    joinDate: user?.created_at || new Date().toISOString(),
+    totalPurchases: 0,
+    totalSpent: 0,
+    favoriteProjects: 0,
+    membershipLevel: 'جديد',
+    rating: 0,
     password: '••••••••',
     notifications: {
       email: true,
@@ -96,6 +99,20 @@ const BuyerProfilePage = () => {
       showPhone: false
     }
   });
+
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        name: user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        country: user.country || '',
+        avatar: user.profile_picture ? `http://localhost:3001${user.profile_picture}` : '/logo.png',
+        joinDate: user.created_at || new Date().toISOString()
+      }));
+    }
+  }, [user]);
 
   // Sample data for different sections
   const transactions = [

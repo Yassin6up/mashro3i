@@ -43,8 +43,10 @@ import { useNotifications } from '@/contexts/NotificationContext';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import BankAccountModal from '@/components/BankAccountModal';
 import { projectsApi } from '@/utils/api';
+import { useAuth } from '@/hooks/useAuth';
 
 const SellerProfilePage = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
@@ -52,24 +54,41 @@ const SellerProfilePage = () => {
   const { stats, getUnreadCount } = useNotifications();
   const [myProjects, setMyProjects] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  
   const [profileData, setProfileData] = useState({
-    name: 'أحمد محمد السيد',
-    email: 'ahmed.seller@example.com',
-    phone: '+966 50 123 4567',
-    country: 'السعودية',
-    city: 'الرياض',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    joinDate: '2023-08-15',
-    totalProjects: 23,
-    totalEarnings: 156000,
-    averageRating: 4.8,
-    totalReviews: 187,
-    completedOrders: 45,
-    activeProjects: 8,
-    sellerLevel: 'خبير معتمد',
-    specialization: 'تطوير تطبيقات الويب',
-    description: 'مطور متخصص في تطوير تطبيقات الويب والجوال بخبرة تزيد عن 8 سنوات. أعمل مع أحدث التقنيات لتقديم حلول مبتكرة وموثوقة للعملاء.'
+    name: user?.full_name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    country: user?.country || '',
+    city: '',
+    avatar: user?.profile_picture ? `http://localhost:3001${user.profile_picture}` : '/logo.png',
+    joinDate: user?.created_at || new Date().toISOString(),
+    totalProjects: 0,
+    totalEarnings: 0,
+    averageRating: 0,
+    totalReviews: 0,
+    completedOrders: 0,
+    activeProjects: 0,
+    sellerLevel: 'بائع جديد',
+    specialization: user?.programming_skills?.join(', ') || 'بائع',
+    description: user?.self_description || ''
   });
+
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        name: user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        country: user.country || '',
+        avatar: user.profile_picture ? `http://localhost:3001${user.profile_picture}` : '/logo.png',
+        joinDate: user.created_at || new Date().toISOString(),
+        specialization: user.programming_skills?.join(', ') || 'بائع',
+        description: user.self_description || ''
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchMyProjects = async () => {
