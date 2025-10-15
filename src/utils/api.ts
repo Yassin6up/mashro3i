@@ -461,6 +461,24 @@ export const messagesApi = {
     })
     if (!resp?.success) throw new Error('Failed to send message')
     return resp.data
+  },
+
+  sendMessageWithFile: async (receiver_id: number, file: File, message?: string, transaction_id?: number) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('receiver_id', receiver_id.toString())
+    if (message) formData.append('message', message)
+    if (transaction_id) formData.append('transaction_id', transaction_id.toString())
+
+    type SendResponse = { success: boolean; data: any }
+    const resp = await request<SendResponse>('/chat/send', {
+      method: 'POST',
+      body: formData,
+      isFormData: true,
+      auth: true
+    })
+    if (!resp?.success) throw new Error('Failed to send message with file')
+    return resp.data
   }
 }
 

@@ -21,7 +21,13 @@ import {
   Star,
   Shield,
   AlertCircle,
-  Loader2
+  Loader2,
+  ImageIcon,
+  Mic,
+  X,
+  Play,
+  Pause,
+  StopCircle
 } from 'lucide-react';
 import { messagesApi } from '@/utils/api';
 
@@ -32,6 +38,10 @@ interface Message {
   receiver_id: number;
   created_at: string;
   is_read: boolean;
+  message_type?: string;
+  file_path?: string;
+  file_size?: number;
+  file_type?: string;
 }
 
 interface Conversation {
@@ -55,6 +65,11 @@ const ChatContent = () => {
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
   const [projectContext, setProjectContext] = useState<{
     projectId: string | null;
     projectTitle: string | null;
@@ -66,6 +81,11 @@ const ChatContent = () => {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const API_URL = 'http://localhost:3001';
 
@@ -157,18 +177,30 @@ const ChatContent = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !selectedUserId) return;
+    if ((!message.trim() && !selectedImage && !audioBlob) || !selectedUserId) return;
     
     setSendingMessage(true);
     try {
-      const newMessage = await messagesApi.sendMessage(selectedUserId, message.trim());
+      let newMessage;
+      
+      if (selectedImage) {
+        newMessage = await messagesApi.sendMessageWithFile(selectedUserId, selectedImage, message.trim());
+        setSelectedImage(null);
+      } else if (audioBlob) {
+        const audioFile = new File([audioBlob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+        newMessage = await messagesApi.sendMessageWithFile(selectedUserId, audioFile, message.trim() || 'رسالة صوتية');
+        setAudioBlob(null);
+      } else {
+        newMessage = await messagesApi.sendMessage(selectedUserId, message.trim());
+      }
+      
       setMessages(prev => [...prev, newMessage]);
       setMessage('');
       setTimeout(scrollToBottom, 100);
       
       setConversations(prev => prev.map(conv => 
         conv.user_id === selectedUserId 
-          ? { ...conv, last_message: message.trim(), last_message_time: new Date().toISOString() }
+          ? { ...conv, last_message: newMessage.message, last_message_time: new Date().toISOString() }
           : conv
       ));
     } catch (error: any) {
@@ -182,6 +214,81 @@ const ChatContent = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('فشل بدء التسجيل. يرجى التحقق من إذن الميكروفون.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setAudioBlob(null);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    }
+  };
+
+  const playAudio = (audioUrl: string, messageId: number) => {
+    if (playingAudioId === messageId) {
+      audioRef.current?.pause();
+      setPlayingAudioId(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.play();
+      setPlayingAudioId(messageId);
+      audioRef.current.onended = () => setPlayingAudioId(null);
     }
   };
 
@@ -208,6 +315,12 @@ const ChatContent = () => {
     }
   };
 
+  const formatRecordingTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const getStatusIcon = (msg: Message) => {
     if (msg.sender_id !== currentUser?.id) return null;
     
@@ -215,6 +328,51 @@ const ChatContent = () => {
       return <CheckCheck className="w-4 h-4 text-blue-500" />;
     }
     return <Check className="w-4 h-4 text-gray-400" />;
+  };
+
+  const renderMessageContent = (msg: Message) => {
+    const isCurrentUser = msg.sender_id === currentUser?.id;
+
+    if (msg.message_type === 'image' && msg.file_path) {
+      return (
+        <div>
+          <img 
+            src={`${API_URL}${msg.file_path}`} 
+            alt="صورة" 
+            className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => window.open(`${API_URL}${msg.file_path}`, '_blank')}
+          />
+          {msg.message && msg.message !== 'صورة' && (
+            <p className="text-sm mt-2">{msg.message}</p>
+          )}
+        </div>
+      );
+    }
+
+    if (msg.message_type === 'voice' && msg.file_path) {
+      return (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => playAudio(`${API_URL}${msg.file_path}`, msg.id)}
+            className="p-2 hover:bg-black/10 rounded-full transition-colors"
+          >
+            {playingAudioId === msg.id ? (
+              <Pause className="w-5 h-5" />
+            ) : (
+              <Play className="w-5 h-5" />
+            )}
+          </button>
+          <div className="flex-1">
+            <div className="h-1 bg-black/20 rounded-full">
+              <div className="h-1 bg-white/40 rounded-full w-0"></div>
+            </div>
+          </div>
+          <Mic className="w-4 h-4" />
+        </div>
+      );
+    }
+
+    return <p className="text-sm">{msg.message}</p>;
   };
 
   const filteredConversations = conversations.filter(conv =>
@@ -385,7 +543,7 @@ const ChatContent = () => {
                                 ? 'bg-[#7EE7FC] text-black rounded-br-md' 
                                 : 'bg-gray-100 text-gray-900 rounded-bl-md'
                             }`}>
-                              <p className="text-sm">{msg.message}</p>
+                              {renderMessageContent(msg)}
                               <div className={`flex items-center justify-end gap-1 mt-2 text-xs ${
                                 isCurrentUser ? 'text-black' : 'text-gray-500'
                               }`}>
@@ -402,7 +560,78 @@ const ChatContent = () => {
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gray-50">
+                  {selectedImage && (
+                    <div className="mb-3 relative inline-block">
+                      <img 
+                        src={URL.createObjectURL(selectedImage)} 
+                        alt="معاينة" 
+                        className="h-20 rounded-lg"
+                      />
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {audioBlob && (
+                    <div className="mb-3 bg-white rounded-lg p-3 flex items-center gap-3">
+                      <Mic className="w-5 h-5 text-[#7EE7FC]" />
+                      <span className="text-sm">رسالة صوتية جاهزة للإرسال</span>
+                      <button
+                        onClick={() => setAudioBlob(null)}
+                        className="mr-auto text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {isRecording && (
+                    <div className="mb-3 bg-red-50 rounded-lg p-3 flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-red-600">
+                          {formatRecordingTime(recordingTime)}
+                        </span>
+                      </div>
+                      <button
+                        onClick={stopRecording}
+                        className="mr-auto bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
+                      >
+                        <StopCircle className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={cancelRecording}
+                        className="text-gray-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 hover:bg-gray-200 rounded-3xl transition-colors"
+                    >
+                      <ImageIcon className="w-5 h-5 text-gray-600" />
+                    </button>
+                    <button 
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`p-2 hover:bg-gray-200 rounded-3xl transition-colors ${isRecording ? 'bg-red-100' : ''}`}
+                    >
+                      <Mic className={`w-5 h-5 ${isRecording ? 'text-red-500' : 'text-gray-600'}`} />
+                    </button>
                     <div className="flex-1 relative">
                       <input
                         type="text"
@@ -410,13 +639,13 @@ const ChatContent = () => {
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
                         placeholder="اكتب رسالتك هنا..."
-                        disabled={sendingMessage}
+                        disabled={sendingMessage || isRecording}
                         className="w-full pr-4 pl-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                       />
                     </div>
                     <button
                       onClick={handleSendMessage}
-                      disabled={!message.trim() || sendingMessage}
+                      disabled={(!message.trim() && !selectedImage && !audioBlob) || sendingMessage}
                       className="p-3 bg-[#7EE7FC] hover:bg-[#3bdeff] disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-full transition-colors"
                     >
                       {sendingMessage ? (
