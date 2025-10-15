@@ -12,6 +12,6 @@ const {
 router.post('/send', authenticateToken, sendMessage);
 router.get('/conversations', authenticateToken, getConversations);
 router.get('/unread-count', authenticateToken, getUnreadCount);
-router.get('/:user_id', authenticateToken, getMessages);
+router.get('/messages/:user_id', authenticateToken, getMessages);
 
 module.exports = router;
