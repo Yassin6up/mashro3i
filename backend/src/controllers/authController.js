@@ -109,10 +109,15 @@ const registerCustomer = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
+    
+    console.log('🔐 Login attempt:', { email, rememberMe });
 
     // Find user
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    console.log('👤 User found:', result.rows.length > 0 ? 'Yes' : 'No');
+    
     if (result.rows.length === 0) {
+      console.log('❌ Login failed: User not found');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
@@ -120,7 +125,10 @@ const login = async (req, res) => {
 
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('🔑 Password valid:', isValidPassword ? 'Yes' : 'No');
+    
     if (!isValidPassword) {
+      console.log('❌ Login failed: Invalid password');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
@@ -134,6 +142,7 @@ const login = async (req, res) => {
       { expiresIn: tokenExpiry }
     );
 
+    console.log('✅ Login successful for user:', user.email);
     res.json({
       success: true,
       message: 'Login successful',
