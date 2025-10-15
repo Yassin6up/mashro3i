@@ -391,5 +391,51 @@ export const withdrawalsApi = {
   }
 }
 
+export const notificationsApi = {
+  getNotifications: async () => {
+    type NotificationsResponse = { success: boolean; data: any[] }
+    const resp = await request<NotificationsResponse>('/notifications', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load notifications')
+    return resp.data
+  },
+
+  getUnreadCount: async () => {
+    type CountResponse = { success: boolean; data: { count: number } }
+    const resp = await request<CountResponse>('/notifications/unread-count', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load unread count')
+    return resp.data
+  },
+
+  markAsRead: async (id: number) => {
+    type ReadResponse = { success: boolean; data: any }
+    const resp = await request<ReadResponse>(`/notifications/${id}/read`, {
+      method: 'PUT',
+      auth: true
+    })
+    if (!resp?.success) throw new Error('Failed to mark notification as read')
+    return resp.data
+  },
+
+  markAllAsRead: async () => {
+    type ReadAllResponse = { success: boolean; message: string }
+    const resp = await request<ReadAllResponse>('/notifications/mark-all-read', {
+      method: 'PUT',
+      auth: true
+    })
+    if (!resp?.success) throw new Error('Failed to mark all notifications as read')
+    return resp
+  },
+
+  deleteNotification: async (id: number) => {
+    type DeleteResponse = { success: boolean; message: string }
+    const resp = await request<DeleteResponse>(`/notifications/${id}`, {
+      method: 'DELETE',
+      auth: true
+    })
+    if (!resp?.success) throw new Error('Failed to delete notification')
+    return resp
+  }
+}
+
 export type { RequestOptions }
 

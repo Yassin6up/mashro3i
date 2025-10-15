@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Notification, PurchaseRequest, NotificationStats, EscrowTransaction, NotificationType } from '@/types';
-import { storage, generateId } from '@/utils/helpers';
+import { storage, generateId, authStorage } from '@/utils/helpers';
 import { STORAGE_KEYS, NOTIFICATION_TYPES } from '@/constants';
 import { TRANSACTION_NOTIFICATION_TEMPLATES, generateTransactionNotification } from '@/utils/notificationTemplates';
+import { notificationsApi } from '@/utils/api';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -68,10 +69,17 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     urgent: 0
   });
 
-  // Load notifications from localStorage on mount
+  // Load notifications from API on mount and set up polling
   useEffect(() => {
     loadNotifications();
     loadPurchaseRequests();
+
+    // Poll notifications every 30 seconds
+    const interval = setInterval(() => {
+      loadNotifications();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Update stats whenever notifications change
@@ -79,10 +87,44 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     updateStats();
   }, [notifications]);
 
-  const loadNotifications = () => {
-    const stored = storage.get<Notification[]>(STORAGE_KEYS.NOTIFICATIONS);
-    if (stored) {
-      setNotifications(stored);
+  const loadNotifications = async () => {
+    // Check if user is logged in
+    const token = authStorage.getToken();
+    if (!token) {
+      // If not logged in, try to load from localStorage
+      const stored = storage.get<Notification[]>(STORAGE_KEYS.NOTIFICATIONS);
+      if (stored) {
+        setNotifications(stored);
+      }
+      return;
+    }
+
+    try {
+      // Fetch from API
+      const apiNotifications = await notificationsApi.getNotifications();
+      
+      // Transform API notifications to match our Notification type
+      const transformedNotifications: Notification[] = apiNotifications.map((n: any) => ({
+        id: n.id,
+        type: n.type as NotificationType,
+        title: n.title,
+        message: n.message,
+        isRead: n.is_read,
+        createdAt: n.created_at,
+        priority: 'medium' as const,
+        actionUrl: n.link || undefined
+      }));
+
+      setNotifications(transformedNotifications);
+      // Cache in localStorage
+      storage.set(STORAGE_KEYS.NOTIFICATIONS, transformedNotifications);
+    } catch (error) {
+      console.error('Failed to load notifications from API:', error);
+      // Fallback to localStorage on error
+      const stored = storage.get<Notification[]>(STORAGE_KEYS.NOTIFICATIONS);
+      if (stored) {
+        setNotifications(stored);
+      }
     }
   };
 
@@ -138,7 +180,18 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     saveNotifications(updatedNotifications);
   };
 
-  const markAsRead = (notificationId: number) => {
+  const markAsRead = async (notificationId: number) => {
+    const token = authStorage.getToken();
+    
+    if (token) {
+      try {
+        await notificationsApi.markAsRead(notificationId);
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
+    }
+
+    // Update local state
     const updated = notifications.map(notification =>
       notification.id === notificationId
         ? { ...notification, isRead: true }
@@ -147,12 +200,34 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     saveNotifications(updated);
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    const token = authStorage.getToken();
+    
+    if (token) {
+      try {
+        await notificationsApi.markAllAsRead();
+      } catch (error) {
+        console.error('Failed to mark all notifications as read:', error);
+      }
+    }
+
+    // Update local state
     const updated = notifications.map(notification => ({ ...notification, isRead: true }));
     saveNotifications(updated);
   };
 
-  const deleteNotification = (notificationId: number) => {
+  const deleteNotification = async (notificationId: number) => {
+    const token = authStorage.getToken();
+    
+    if (token) {
+      try {
+        await notificationsApi.deleteNotification(notificationId);
+      } catch (error) {
+        console.error('Failed to delete notification:', error);
+      }
+    }
+
+    // Update local state
     const updated = notifications.filter(notification => notification.id !== notificationId);
     saveNotifications(updated);
   };
