@@ -4,7 +4,15 @@
 A comprehensive platform for buying and selling digital projects with a secure Escrow system and a 15% platform commission. The project aims to provide a reliable marketplace for digital assets, ensuring secure transactions and fostering direct communication between buyers and sellers.
 
 ## Recent Code Quality Improvements (October 15, 2025)
+
+### Security & Bug Fixes
 - ✅ **Security Fix**: Corrected critical withdrawal bug preventing double-spending of seller earnings
+- ✅ **Notifications System Fixed**: Resolved issue where notifications were not being delivered to users
+  - Frontend now fetches notifications from Backend API instead of localStorage
+  - Added automatic polling every 30 seconds for real-time updates
+  - All notification operations (read, delete) now sync with backend
+
+### Code Quality & Organization
 - ✅ **Code Cleanup**: Removed duplicate and unused files (old transactionController.js, ecosystem configs, README duplicates)
 - ✅ **Version Control**: Updated .gitignore to properly exclude backend/node_modules, uploads, and temporary files
 - ✅ **Quality Assurance**: Comprehensive code review confirming security, scalability, and best practices
