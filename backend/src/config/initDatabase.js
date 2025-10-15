@@ -119,6 +119,11 @@ const createTables = async () => {
         receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         transaction_id INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
         message TEXT NOT NULL,
+        message_type VARCHAR(20) DEFAULT 'text' CHECK (message_type IN ('text', 'image', 'voice', 'file')),
+        file_path VARCHAR(500),
+        file_size BIGINT,
+        file_type VARCHAR(100),
+        file_name VARCHAR(500),
         is_read BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
