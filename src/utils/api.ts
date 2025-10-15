@@ -307,5 +307,89 @@ export const offersApi = {
   }
 }
 
+export const transactionsApi = {
+  create: async (offerId: number, paymentMethod: string) => {
+    type CreateTransactionResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<CreateTransactionResponse>('/transactions', {
+      method: 'POST',
+      auth: true,
+      body: { offer_id: offerId, payment_method: paymentMethod }
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to create transaction')
+    return resp.data
+  },
+
+  uploadFiles: async (transactionId: number, files: FormData) => {
+    type UploadResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<UploadResponse>(`/transactions/${transactionId}/upload-files`, {
+      method: 'POST',
+      auth: true,
+      isFormData: true,
+      body: files
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to upload files')
+    return resp.data
+  },
+
+  review: async (transactionId: number, status: string, feedback?: string) => {
+    type ReviewResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<ReviewResponse>(`/transactions/${transactionId}/review`, {
+      method: 'POST',
+      auth: true,
+      body: { status, feedback }
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to review transaction')
+    return resp.data
+  },
+
+  getMyTransactions: async () => {
+    type TransactionsResponse = { success: boolean; data: any[] }
+    const resp = await request<TransactionsResponse>('/transactions/my-transactions', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load transactions')
+    return resp.data
+  },
+
+  getById: async (id: number) => {
+    type TransactionResponse = { success: boolean; data: any }
+    const resp = await request<TransactionResponse>(`/transactions/${id}`, { auth: true })
+    if (!resp?.success) throw new Error('Failed to load transaction')
+    return resp.data
+  }
+}
+
+export const withdrawalsApi = {
+  getBalance: async () => {
+    type BalanceResponse = { success: boolean; data: any }
+    const resp = await request<BalanceResponse>('/withdrawals/balance', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load balance')
+    return resp.data
+  },
+
+  requestWithdrawal: async (amount: number, methodId: number, accountDetails: string) => {
+    type WithdrawalResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<WithdrawalResponse>('/withdrawals/request', {
+      method: 'POST',
+      auth: true,
+      body: { amount, withdrawal_method_id: methodId, account_details: accountDetails }
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to request withdrawal')
+    return resp.data
+  },
+
+  getMyWithdrawals: async () => {
+    type WithdrawalsResponse = { success: boolean; data: any[] }
+    const resp = await request<WithdrawalsResponse>('/withdrawals/my-withdrawals', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load withdrawals')
+    return resp.data
+  },
+
+  getMethods: async () => {
+    type MethodsResponse = { success: boolean; data: any[] }
+    const resp = await request<MethodsResponse>('/withdrawals/methods', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load withdrawal methods')
+    return resp.data
+  }
+}
+
 export type { RequestOptions }
 

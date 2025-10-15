@@ -2,21 +2,23 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken, isBuyer } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/admin');
+const upload = require('../utils/fileUpload');
 const {
   createTransaction,
-  releaseEscrow,
-  getUserTransactions,
-  getTransactionById,
-  requestRefund,
-  getPlatformEarnings
-} = require('../controllers/transactionController');
+  uploadProjectFiles,
+  reviewTransaction,
+  getMyTransactions,
+  getTransactionById
+} = require('../controllers/transactionsController');
 
-// Protected routes
-router.post('/', authenticateToken, isBuyer, createTransaction);
-router.post('/:transaction_id/release', authenticateToken, releaseEscrow);
-router.post('/:transaction_id/refund', authenticateToken, isBuyer, requestRefund);
-router.get('/', authenticateToken, getUserTransactions);
-router.get('/platform/earnings', authenticateToken, isAdmin, getPlatformEarnings);
+router.post('/', authenticateToken, createTransaction);
+
+router.post('/:transaction_id/upload-files', authenticateToken, upload.array('files', 10), uploadProjectFiles);
+
+router.post('/:transaction_id/review', authenticateToken, reviewTransaction);
+
+router.get('/my-transactions', authenticateToken, getMyTransactions);
+
 router.get('/:id', authenticateToken, getTransactionById);
 
 module.exports = router;
