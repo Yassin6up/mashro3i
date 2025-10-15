@@ -1,15 +1,40 @@
 const pool = require('../config/database');
 
-// Send Message
+// Send Message (Text, Image, or Voice)
 const sendMessage = async (req, res) => {
   try {
     const { receiver_id, message, transaction_id } = req.body;
     const sender_id = req.user.id;
+    
+    let message_type = 'text';
+    let file_path = null;
+    let file_size = null;
+    let file_type = null;
+    let message_text = message;
+
+    // Check if file was uploaded
+    if (req.file) {
+      file_path = `/uploads/chat/${req.file.filename}`;
+      file_size = req.file.size;
+      file_type = req.file.mimetype;
+      
+      // Determine message type based on file mimetype
+      if (req.file.mimetype.startsWith('image/')) {
+        message_type = 'image';
+        message_text = message || 'صورة';
+      } else if (req.file.mimetype.startsWith('audio/') || req.file.filename.endsWith('.webm')) {
+        message_type = 'voice';
+        message_text = message || 'رسالة صوتية';
+      } else {
+        message_type = 'file';
+        message_text = message || 'ملف';
+      }
+    }
 
     const result = await pool.query(
-      `INSERT INTO messages (sender_id, receiver_id, transaction_id, message)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [sender_id, receiver_id, transaction_id, message]
+      `INSERT INTO messages (sender_id, receiver_id, transaction_id, message, message_type, file_path, file_size, file_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [sender_id, receiver_id, transaction_id, message_text, message_type, file_path, file_size, file_type]
     );
 
     // Create notification for receiver
@@ -20,7 +45,7 @@ const sendMessage = async (req, res) => {
         receiver_id,
         'new_message',
         'رسالة جديدة',
-        'لديك رسالة جديدة',
+        message_type === 'image' ? 'أرسل لك صورة' : message_type === 'voice' ? 'أرسل لك رسالة صوتية' : 'لديك رسالة جديدة',
         '/chat'
       ]
     );
@@ -38,32 +63,51 @@ const sendMessage = async (req, res) => {
 // Get Conversations
 const getConversations = async (req, res) => {
   try {
+    const user_id = req.user.id;
+    
     const result = await pool.query(
-      `SELECT DISTINCT ON (conversation_user_id)
-         conversation_user_id,
-         u.full_name,
-         u.profile_picture,
-         m.message as last_message,
-         m.created_at as last_message_time,
-         m.is_read
-       FROM (
-         SELECT 
-           CASE 
-             WHEN sender_id = $1 THEN receiver_id 
-             ELSE sender_id 
-           END as conversation_user_id,
-           *
-         FROM messages
-         WHERE sender_id = $1 OR receiver_id = $1
-       ) m
-       JOIN users u ON u.id = m.conversation_user_id
-       ORDER BY conversation_user_id, m.created_at DESC`,
-      [req.user.id]
+      `SELECT 
+        CASE 
+          WHEN m.sender_id = $1 THEN m.receiver_id 
+          ELSE m.sender_id 
+        END as user_id,
+        u.full_name as user_name,
+        u.profile_picture as user_picture,
+        m.message as last_message,
+        m.message_type,
+        m.created_at as last_message_time,
+        COUNT(CASE WHEN m.receiver_id = $1 AND m.is_read = false THEN 1 END) as unread_count
+      FROM messages m
+      JOIN users u ON u.id = CASE 
+        WHEN m.sender_id = $1 THEN m.receiver_id 
+        ELSE m.sender_id 
+      END
+      WHERE m.sender_id = $1 OR m.receiver_id = $1
+      GROUP BY 
+        CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END,
+        u.full_name,
+        u.profile_picture,
+        m.message,
+        m.message_type,
+        m.created_at
+      ORDER BY m.created_at DESC`,
+      [user_id]
     );
+
+    // Get unique conversations
+    const conversations = [];
+    const seenUserIds = new Set();
+    
+    for (const row of result.rows) {
+      if (!seenUserIds.has(row.user_id)) {
+        seenUserIds.add(row.user_id);
+        conversations.push(row);
+      }
+    }
 
     res.json({
       success: true,
-      data: result.rows
+      data: conversations
     });
   } catch (error) {
     console.error('Get conversations error:', error);

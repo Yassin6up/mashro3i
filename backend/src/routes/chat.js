@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
+const chatUpload = require('../middleware/chatUpload');
 const {
   sendMessage,
   getConversations,
@@ -9,7 +10,7 @@ const {
 } = require('../controllers/chatController');
 
 // All routes are protected
-router.post('/send', authenticateToken, sendMessage);
+router.post('/send', authenticateToken, chatUpload.single('file'), sendMessage);
 router.get('/conversations', authenticateToken, getConversations);
 router.get('/unread-count', authenticateToken, getUnreadCount);
 router.get('/messages/:user_id', authenticateToken, getMessages);
