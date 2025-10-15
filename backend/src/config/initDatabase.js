@@ -172,6 +172,77 @@ const createTables = async () => {
       )
     `);
 
+    // Offers table (Custom offers and counter offers)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS offers (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+        buyer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        amount DECIMAL(10, 2) NOT NULL,
+        message TEXT,
+        status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'countered')),
+        parent_offer_id INTEGER REFERENCES offers(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Project files (Files delivered by seller after payment)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS project_files (
+        id SERIAL PRIMARY KEY,
+        transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
+        file_name VARCHAR(500) NOT NULL,
+        file_path VARCHAR(500) NOT NULL,
+        file_type VARCHAR(50),
+        file_size BIGINT,
+        description TEXT,
+        uploaded_by INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seller earnings (Track seller balance and earnings)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS seller_earnings (
+        id SERIAL PRIMARY KEY,
+        seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
+        amount DECIMAL(10, 2) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'available', 'withdrawn')),
+        available_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Withdrawals table (Withdrawal requests from sellers)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS withdrawals (
+        id SERIAL PRIMARY KEY,
+        seller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        amount DECIMAL(10, 2) NOT NULL,
+        withdrawal_method_id INTEGER REFERENCES withdrawal_methods(id) ON DELETE SET NULL,
+        account_details TEXT,
+        status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'rejected')),
+        processed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Transaction reviews (Buyer reviews after receiving project)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS transaction_reviews (
+        id SERIAL PRIMARY KEY,
+        transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
+        buyer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'revision_requested')),
+        feedback TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Database tables created successfully');
     

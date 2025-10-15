@@ -80,9 +80,21 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
 
   const handleSendCustomOffer = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`تم إرسال عرضك المخصص!\nالسعر المقترح: $${customOffer.price}\nالرسالة: ${customOffer.message || 'لا توجد رسالة'}`);
-    setIsCustomOfferModalOpen(false);
-    setCustomOffer({ price: '', message: '' });
+    
+    try {
+      const { offersApi } = await import('@/utils/api');
+      await offersApi.create(
+        parseInt(params.id),
+        parseFloat(customOffer.price),
+        customOffer.message
+      );
+      
+      alert(`✅ تم إرسال عرضك المخصص بنجاح!\nسيتم إشعار البائع بعرضك.`);
+      setIsCustomOfferModalOpen(false);
+      setCustomOffer({ price: '', message: '' });
+    } catch (error: any) {
+      alert(`❌ فشل إرسال العرض: ${error.message}`);
+    }
   };
 
   if (loading) {

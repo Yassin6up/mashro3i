@@ -10,6 +10,7 @@ const transactionRoutes = require('./routes/transactions');
 const notificationRoutes = require('./routes/notifications');
 const chatRoutes = require('./routes/chat');
 const paymentRoutes = require('./routes/payment');
+const offersRoutes = require('./routes/offers');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,6 +52,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/offers', offersRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

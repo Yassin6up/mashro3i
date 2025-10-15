@@ -249,5 +249,63 @@ export const projectsApi = {
   }
 }
 
+export const offersApi = {
+  create: async (projectId: number, amount: number, message?: string) => {
+    type CreateOfferResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<CreateOfferResponse>('/offers', {
+      method: 'POST',
+      auth: true,
+      body: { project_id: projectId, amount, message }
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to create offer')
+    return resp.data
+  },
+
+  getMyOffers: async () => {
+    type MyOffersResponse = { success: boolean; data: any[] }
+    const resp = await request<MyOffersResponse>('/offers/my-offers', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load offers')
+    return resp.data
+  },
+
+  getById: async (id: number) => {
+    type OfferResponse = { success: boolean; data: any }
+    const resp = await request<OfferResponse>(`/offers/${id}`, { auth: true })
+    if (!resp?.success) throw new Error('Failed to load offer')
+    return resp.data
+  },
+
+  accept: async (id: number) => {
+    type AcceptResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<AcceptResponse>(`/offers/${id}/accept`, {
+      method: 'PUT',
+      auth: true
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to accept offer')
+    return resp.data
+  },
+
+  counter: async (id: number, newAmount: number, message?: string) => {
+    type CounterResponse = { success: boolean; message?: string; data?: any }
+    const resp = await request<CounterResponse>(`/offers/${id}/counter`, {
+      method: 'PUT',
+      auth: true,
+      body: { new_amount: newAmount, message }
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to send counter offer')
+    return resp.data
+  },
+
+  reject: async (id: number) => {
+    type RejectResponse = { success: boolean; message?: string }
+    const resp = await request<RejectResponse>(`/offers/${id}/reject`, {
+      method: 'PUT',
+      auth: true
+    })
+    if (!resp?.success) throw new Error(resp?.message || 'Failed to reject offer')
+    return resp
+  }
+}
+
 export type { RequestOptions }
 
