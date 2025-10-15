@@ -75,12 +75,27 @@ const requestWithdrawal = async (req, res) => {
       if (remaining <= 0) break;
 
       const earningAmount = parseFloat(earning.amount);
+      
       if (earningAmount <= remaining) {
         await client.query(
-          `UPDATE seller_earnings SET status = 'withdrawn' WHERE id = $1`,
+          `UPDATE seller_earnings SET status = 'withdrawn', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
           [earning.id]
         );
         remaining -= earningAmount;
+      } else {
+        await client.query(
+          `UPDATE seller_earnings SET amount = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+          [earningAmount - remaining, earning.id]
+        );
+        
+        await client.query(
+          `INSERT INTO seller_earnings (seller_id, transaction_id, amount, status, created_at) 
+           SELECT seller_id, transaction_id, $1, 'withdrawn', CURRENT_TIMESTAMP 
+           FROM seller_earnings WHERE id = $2`,
+          [remaining, earning.id]
+        );
+        
+        remaining = 0;
       }
     }
 
