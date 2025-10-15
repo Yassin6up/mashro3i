@@ -437,5 +437,32 @@ export const notificationsApi = {
   }
 }
 
+export const messagesApi = {
+  getConversations: async () => {
+    type ConversationsResponse = { success: boolean; data: any[] }
+    const resp = await request<ConversationsResponse>('/chat/conversations', { auth: true })
+    if (!resp?.success) throw new Error('Failed to load conversations')
+    return resp.data
+  },
+
+  getMessages: async (otherUserId: number) => {
+    type MessagesResponse = { success: boolean; data: any[] }
+    const resp = await request<MessagesResponse>(`/chat/messages/${otherUserId}`, { auth: true })
+    if (!resp?.success) throw new Error('Failed to load messages')
+    return resp.data
+  },
+
+  sendMessage: async (receiver_id: number, message: string, transaction_id?: number) => {
+    type SendResponse = { success: boolean; data: any }
+    const resp = await request<SendResponse>('/chat/send', {
+      method: 'POST',
+      body: { receiver_id, message, transaction_id },
+      auth: true
+    })
+    if (!resp?.success) throw new Error('Failed to send message')
+    return resp.data
+  }
+}
+
 export type { RequestOptions }
 
