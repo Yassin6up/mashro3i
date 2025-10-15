@@ -146,8 +146,10 @@ const CreateProjectPage = () => {
       // Create project
       await projectsApi.create(formData);
 
-      // Success - redirect to seller profile
-      router.push('/profile/seller');
+      // Show success message and redirect
+      setError('');
+      alert('تم رفع المشروع بنجاح ✅');
+      router.push('/');
     } catch (err: any) {
       setError(err?.message || 'فشل إنشاء المشروع');
     } finally {

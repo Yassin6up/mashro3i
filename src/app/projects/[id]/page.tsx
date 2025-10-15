@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -18,33 +18,71 @@ import {
   Play,
   BarChart3,
   Globe,
-  Users,
-  Calendar,
-  Shield,
-  Award,
   Code,
-  Zap,
-  ShoppingCart
+  Shield,
+  Loader2,
+  X
 } from 'lucide-react';
-import { featuredProjects } from '@/data/projects';
-import PurchaseRequestModal from '@/components/PurchaseRequestModal';
+import { projectsApi } from '@/utils/api';
 
 interface ProjectDetailPageProps {
   params: { id: string };
 }
 
 const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
-  const projectId = parseInt(params.id);
-  const project = featuredProjects.find(p => p.id === projectId);
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isCustomOfferModalOpen, setIsCustomOfferModalOpen] = useState(false);
+  const [customOffer, setCustomOffer] = useState({
+    price: '',
+    message: ''
+  });
 
-  if (!project) {
+  useEffect(() => {
+    let isMounted = true;
+    
+    projectsApi.getById(params.id)
+      .then(data => {
+        if (isMounted) {
+          setProject(data);
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (isMounted) {
+          setError(err.message || 'فشل تحميل المشروع');
+          setLoading(false);
+        }
+      });
+      
+    return () => {
+      isMounted = false;
+    };
+  }, [params.id]);
+
+  const handleSendCustomOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(`تم إرسال عرضك المخصص!\nالسعر المقترح: $${customOffer.price}\nالرسالة: ${customOffer.message || 'لا توجد رسالة'}`);
+    setIsCustomOfferModalOpen(false);
+    setCustomOffer({ price: '', message: '' });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error || !project) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">المشروع غير موجود</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{error || 'المشروع غير موجود'}</h1>
           <Link href="/" className="btn-light-blue">العودة للرئيسية</Link>
         </div>
       </div>
@@ -63,59 +101,9 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
     return new Intl.NumberFormat('ar-SA').format(num);
   };
 
-  // Gallery images (using the same image for demo)
-  const galleryImages = [
-    project.image,
-    project.image,
-    project.image,
-    project.image
-  ];
-
-  const faqs = [
-    {
-      question: "هل المشروع جاهز للتشغيل المباشر؟",
-      answer: "نعم، المشروع جاهز تماماً ويمكن تشغيله مباشرة بعد الشراء مع توفير الدعم الفني اللازم."
-    },
-    {
-      question: "ما هي طريقة التسليم؟",
-      answer: "يتم تسليم المشروع خلال 24-48 ساعة عبر البريد الإلكتروني مع جميع الملفات والوثائق المطلوبة."
-    },
-    {
-      question: "هل يشمل السعر الكود المصدري؟",
-      answer: "نعم، السعر يشمل الكود المصدري كاملاً مع التوثيق والتعليمات التفصيلية."
-    },
-    {
-      question: "هل توفرون دعم فني بعد الشراء؟",
-      answer: "نعم، نوفر دعم فني مجاني لمدة شهر واحد بعد الشراء لضمان التشغيل السليم."
-    }
-  ];
-
-  const reviews = [
-    {
-      id: 1,
-      user: "أحمد محمد",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face",
-      rating: 5,
-      comment: "مشروع ممتاز وخدمة عملاء رائعة. أنصح بشدة!",
-      date: "منذ أسبوعين"
-    },
-    {
-      id: 2,
-      user: "فاطمة أحمد",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face",
-      rating: 4,
-      comment: "جودة عالية وكود نظيف. سأشتري مرة أخرى.",
-      date: "منذ شهر"
-    },
-    {
-      id: 3,
-      user: "خالد السعيد",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face",
-      rating: 5,
-      comment: "يحقق العائد المطلوب تماماً كما هو موعود.",
-      date: "منذ شهرين"
-    }
-  ];
+  const API_URL = 'http://localhost:3001';
+  const galleryImages = project?.images?.map((img: string) => `${API_URL}${img}`) || [];
+  const videoLinks = project?.video_links || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,13 +123,7 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
               <h1 className="text-3xl font-bold text-gray-900 mb-4">{project.title}</h1>
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
-                  {project.verified && (
-                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      <CheckCircle className="w-4 h-4" />
-                      موثق
-                    </div>
-                  )}
-                  {project.profitable && (
+                  {project.is_profitable && (
                     <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                       <TrendingUp className="w-4 h-4" />
                       مربح
@@ -150,84 +132,89 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                   <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">{project.category}</span>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{project.rating}</span>
-                  <span className="text-gray-500">({formatNumber(project.reviews)} تقييم)</span>
-                </div>
-                {project.statistics && (
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-4 h-4 text-gray-500" />
-                    <span>{formatNumber(project.statistics.visitors)} زائر</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                  <span>محدث مؤخراً</span>
-                </div>
-              </div>
             </div>
-
-     
           </div>
         </div>
       </div>
 
-      <div className="max-w-full  px-14 py-8">
-        {/* Image and Purchase Info Side by Side */}
+      <div className="max-w-full px-14 py-8">
         <div className="lg:flex gap-8 mb-8">
           {/* Image Gallery */}
           <div className="lg:w-3/4">
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <div className="relative bg-gray-100 rounded-3xl overflow-hidden">
-                <Image
-                  src={galleryImages[currentImageIndex]}
-                  alt={project.title}
-                  width={800}
-                  height={450}
-                  className="w-full h-80 md:h-[500px] object-cover"
-                />
-                {galleryImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200"
-                    >
-                      <ChevronLeft className="w-5 h-5 text-gray-600" />
-                    </button>
-                    <button
-                      onClick={() => setCurrentImageIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200"
-                    >
-                      <ChevronRight className="w-5 h-5 text-gray-600" />
-                    </button>
-                  </>
-                )}
-              </div>
-              
-              {galleryImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto mt-4">
-                  {galleryImages.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-16 rounded-3xl overflow-hidden transition-all duration-200 ${
-                        currentImageIndex === index 
-                          ? 'ring-2 ring-blue-500 shadow-md' 
-                          : 'hover:shadow-md'
-                      }`}
-                    >
-                      <Image
-                        src={image}
-                        alt=""
-                        width={80}
-                        height={60}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
+              {galleryImages.length > 0 && (
+                <>
+                  <div className="relative bg-gray-100 rounded-3xl overflow-hidden">
+                    <Image
+                      src={galleryImages[currentImageIndex]}
+                      alt={project.title}
+                      width={800}
+                      height={450}
+                      className="w-full h-80 md:h-[500px] object-cover"
+                    />
+                    {galleryImages.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)}
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200"
+                        >
+                          <ChevronLeft className="w-5 h-5 text-gray-600" />
+                        </button>
+                        <button
+                          onClick={() => setCurrentImageIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all duration-200"
+                        >
+                          <ChevronRight className="w-5 h-5 text-gray-600" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  {galleryImages.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto mt-4">
+                      {galleryImages.map((image: string, index: number) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`flex-shrink-0 w-20 h-16 rounded-3xl overflow-hidden transition-all duration-200 ${
+                            currentImageIndex === index 
+                              ? 'ring-2 ring-blue-500 shadow-md' 
+                              : 'hover:shadow-md'
+                          }`}
+                        >
+                          <Image
+                            src={image}
+                            alt=""
+                            width={80}
+                            height={60}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Video Links */}
+              {videoLinks.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">الفيديوهات التوضيحية</h3>
+                  <div className="space-y-3">
+                    {videoLinks.map((link: string, index: number) => (
+                      <a
+                        key={index}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors"
+                      >
+                        <Play className="w-5 h-5 text-blue-600" />
+                        <span className="text-blue-800 font-medium">فيديو توضيحي {index + 1}</span>
+                        <ExternalLink className="w-4 h-4 text-blue-600 mr-auto" />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -239,24 +226,28 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
               <div className="text-3xl font-bold text-blue-600 mb-2">
                 {formatPrice(project.price)}
               </div>
-              {project.monthlyRevenue && (
+              {project.monthly_revenue && (
                 <div className="bg-green-50 border border-green-200 rounded-3xl p-3 mb-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-green-800">العائد الشهري</span>
                     <span className="text-green-700 font-bold">
-                      {formatPrice(project.monthlyRevenue)}/شهر
+                      {formatPrice(project.monthly_revenue)}/شهر
                     </span>
                   </div>
                 </div>
               )}
               
               <div className="space-y-3">
-                <Link href={`/projects/${project.id}/purchase`} className="w-full bg-gradient-to-r from-slate-50 to-white border-2 border-cyan-200 text-cyan-700 font-bold rounded-full hover:from-cyan-50 hover:to-cyan-100 hover:border-cyan-300 hover:text-cyan-800 transition-all  duration-300 hover:shadow-xl hover:scale-105 active:scale-95   py-3 px-4 r flex items-center justify-center gap-2">
-                  <DollarSign className="w-5 h-5" />
-                  <span>شراء المشروع</span>
-                </Link>
+                <button 
+                  onClick={() => setIsCustomOfferModalOpen(true)}
+                  className="w-full bg-[#7EE7FC] hover:bg-[#3bdeff] text-white font-semibold py-3 px-4 rounded-3xl transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>إرسال عرض مخصص</span>
+                </button>
+                
                 <Link 
-                  href={`/chat?sellerId=${project.seller.name}&sellerName=${encodeURIComponent(project.seller.name)}&projectId=${project.id}&projectTitle=${encodeURIComponent(project.title)}`} 
+                  href={`/chat?sellerId=${project.seller_id}&sellerName=${encodeURIComponent(project.seller_name || 'البائع')}&projectId=${project.id}&projectTitle=${encodeURIComponent(project.title)}`} 
                   className="w-full text-white font-bold rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2 py-3 px-4"  
                   style={{ background: 'linear-gradient(135deg, #7EE7FC 0%, #5DD3F0 100%)' }}
                 >
@@ -271,9 +262,9 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                   <button className="flex-1 p-3 border border-gray-200 rounded-3xl hover:bg-gray-50 transition-colors duration-200">
                     <Share2 className="w-5 h-5 mx-auto text-gray-600" />
                   </button>
-                  {project.demoUrl && (
+                  {project.demo_url && (
                     <Link 
-                      href={project.demoUrl}
+                      href={project.demo_url}
                       target="_blank"
                       className="flex-1 p-3 border border-gray-200 rounded-3xl hover:bg-gray-50 transition-colors duration-200"
                     >
@@ -288,29 +279,19 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Image
-                  src={project.seller.avatar}
-                  alt={project.seller.name}
+                  src={project.seller_picture ? `${API_URL}${project.seller_picture}` : '/logo.png'}
+                  alt={project.seller_name || 'البائع'}
                   width={50}
                   height={50}
                   className="w-12 h-12 rounded-full"
                 />
                 <div>
-                  <h3 className="font-bold text-gray-900">{project.seller.name}</h3>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span>{project.seller.rating}</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-600">{project.seller.totalSales} مبيعات</span>
-                  </div>
+                  <h3 className="font-bold text-gray-900">{project.seller_name || 'البائع'}</h3>
+                  <Link href={`/profile/seller/${project.seller_id}`} className="text-sm text-blue-600 hover:underline">
+                    عرض الملف الشخصي
+                  </Link>
                 </div>
               </div>
-              <Link 
-                href={`/checkout/escrow?projectId=${project.id}&offerId=1`}
-                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-4 rounded-3xl transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                <Shield className="w-5 h-5" />
-                <span>شراء آمن بضمان الوسيط</span>
-              </Link>
               
               {/* Escrow Protection Notice */}
               <div className="mt-3 p-3 bg-cyan-50 border border-cyan-200 rounded-3xl">
@@ -320,20 +301,12 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                     <h4 className="font-medium mb-1">حماية 100% للمشتري</h4>
                     <ul className="space-y-1">
                       <li>• أموالك محفوظة حتى تأكيد الاستلام</li>
-                      <li>• فترة مراجعة 5 أيام للتحقق من المشروع</li>
+                      <li>• فترة مراجعة 7 أيام للتحقق من المشروع</li>
                       <li>• استرداد كامل إذا لم يطابق المواصفات</li>
                     </ul>
                   </div>
                 </div>
               </div>
-              
-              <button 
-                onClick={() => setIsPurchaseModalOpen(true)}
-                className="w-full bg-[#7EE7FC] hover:bg-[#3bdeff] text-white font-semibold py-3 px-4 rounded-3xl transition-colors duration-200 flex items-center justify-center gap-2 mt-3"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>إرسال عرض مخصص</span>
-              </button>
             </div>
           </div>
         </div>
@@ -341,17 +314,12 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
         {/* Main Content Area */}
         <div className="lg:flex gap-8">
           <div className="lg:flex-1">
-            {/* Tabs */}
             <div className="mb-8">
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3">
                 <div className="flex flex-wrap gap-1">
                   {[
                     { id: 'overview', label: 'نظرة عامة', icon: Globe },
-                    { id: 'features', label: 'الميزات', icon: Zap },
                     { id: 'tech', label: 'التقنيات', icon: Code },
-                    { id: 'analytics', label: 'الإحصائيات', icon: BarChart3 },
-                    { id: 'reviews', label: 'التقييمات', icon: Star },
-                    { id: 'faq', label: 'الأسئلة الشائعة', icon: MessageCircle }
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -370,33 +338,21 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
               </div>
             </div>
 
-            {/* Tab Content */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               {activeTab === 'overview' && (
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">وصف المشروع</h3>
                   <div className="prose max-w-none text-gray-700 leading-relaxed">
-                    <p className="mb-4">{project.description}</p>
-                    <div className="bg-blue-50 rounded-3xl p-4 border border-blue-200">
-                      <p className="text-gray-800">
-                        هذا المشروع تم تطويره باستخدام أحدث التقنيات والمعايير العالمية لضمان الأداء الأمثل والأمان.
-                        يتميز بواجهة مستخدم احترافية وتجربة استخدام سلسة تلبي احتياجات العملاء المختلفة.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'features' && (
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">الميزات الرئيسية</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {project.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-3 p-4 bg-green-50 rounded-3xl border border-green-200">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                        <span className="text-gray-800">{feature}</span>
+                    <p className="mb-4 whitespace-pre-wrap">{project.description}</p>
+                    {project.is_profitable && (
+                      <div className="bg-orange-50 rounded-3xl p-4 border border-orange-200 mt-4">
+                        <h4 className="font-bold text-orange-800 mb-2">معلومات الربحية</h4>
+                        <p className="text-gray-800">
+                          {project.revenue_type && `نوع العائد: ${project.revenue_type}`}
+                          {project.monthly_revenue && ` • العائد الشهري: ${formatPrice(project.monthly_revenue)}`}
+                        </p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
@@ -405,7 +361,7 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-6">التقنيات المستخدمة</h3>
                   <div className="flex flex-wrap gap-3">
-                    {project.technologies.map((tech, index) => (
+                    {project.technologies?.map((tech: string, index: number) => (
                       <span 
                         key={index}
                         className="px-4 py-2 bg-blue-100 text-blue-800 rounded-3xl font-medium"
@@ -416,171 +372,74 @@ const ProjectDetailPage = ({ params }: ProjectDetailPageProps) => {
                   </div>
                 </div>
               )}
-
-              {activeTab === 'analytics' && project.statistics && (
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">إحصائيات الأداء</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-3xl p-6 text-center shadow-md border border-gray-200">
-                      <div className="text-3xl font-bold text-blue-600 mb-2">
-                        {formatNumber(project.statistics.visitors)}
-                      </div>
-                      <div className="text-gray-600">زائر شهرياً</div>
-                    </div>
-                    <div className="bg-white rounded-3xl p-6 text-center shadow-md border border-gray-200">
-                      <div className="text-3xl font-bold text-green-600 mb-2">
-                        {project.statistics.conversionRate}%
-                      </div>
-                      <div className="text-gray-600">معدل التحويل</div>
-                    </div>
-                    <div className="bg-white rounded-3xl p-6 text-center shadow-md border border-gray-200">
-                      <div className="text-3xl font-bold text-orange-600 mb-2">
-                        {formatPrice(project.statistics.revenue[project.statistics.revenue.length - 1])}
-                      </div>
-                      <div className="text-gray-600">العائد الحالي</div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-3xl p-6">
-                    <h4 className="text-lg font-bold text-gray-900 mb-4">تطور العائدات الشهرية</h4>
-                    <div className="space-y-3">
-                      {project.statistics.revenue.map((revenue, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-white rounded-3xl shadow-sm">
-                          <span className="text-gray-600">الشهر {index + 1}</span>
-                          <span className="font-bold text-gray-900">{formatPrice(revenue)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'reviews' && (
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900">تقييمات العملاء</h3>
-                    <div className="flex items-center gap-2">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-5 h-5 ${
-                              i < Math.floor(project.rating) 
-                                ? 'fill-yellow-400 text-yellow-400' 
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="font-bold text-gray-900">{project.rating}</span>
-                      <span className="text-gray-500">({formatNumber(project.reviews)} تقييم)</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="bg-white rounded-3xl p-6 shadow-md border border-gray-200">
-                        <div className="flex items-start gap-4">
-                          <Image
-                            src={review.avatar}
-                            alt={review.user}
-                            width={40}
-                            height={40}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-bold text-gray-900">{review.user}</h4>
-                              <span className="text-sm text-gray-500">{review.date}</span>
-                            </div>
-                            <div className="flex mb-3">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating 
-                                      ? 'fill-yellow-400 text-yellow-400' 
-                                      : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <p className="text-gray-700">{review.comment}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'faq' && (
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">الأسئلة الشائعة</h3>
-                  <div className="space-y-4">
-                    {faqs.map((faq, index) => (
-                      <div key={index} className="bg-white rounded-3xl p-6 shadow-md border border-gray-200">
-                        <h4 className="font-bold text-gray-900 mb-3">{faq.question}</h4>
-                        <p className="text-gray-700">{faq.answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Related Projects */}
-          <div className="lg:w-80 mt-8 lg:mt-0">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">مشاريع مشابهة</h3>
-              <div className="space-y-4">
-                {featuredProjects
-                  .filter(p => p.id !== project.id && p.category === project.category)
-                  .slice(0, 3)
-                  .map((relatedProject) => (
-                    <Link
-                      key={relatedProject.id}
-                      href={`/projects/${relatedProject.id}`}
-                      className="block group"
-                    >
-                      <div className="flex gap-3 p-3 rounded-3xl hover:bg-gray-50 transition-colors duration-200">
-                        <Image
-                          src={relatedProject.image}
-                          alt={relatedProject.title}
-                          width={60}
-                          height={45}
-                          className="w-15 h-11 object-cover rounded"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600">
-                            {relatedProject.title}
-                          </h4>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-blue-600 font-bold text-sm">
-                              {formatPrice(relatedProject.price)}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs text-gray-600">{relatedProject.rating}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-              </div>
             </div>
           </div>
         </div>
       </div>
-      
-      {/* Purchase Request Modal */}
-      <PurchaseRequestModal
-        isOpen={isPurchaseModalOpen}
-        onClose={() => setIsPurchaseModalOpen(false)}
-        project={project}
-      />
+
+      {/* Custom Offer Modal */}
+      {isCustomOfferModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold text-gray-900">إرسال عرض مخصص</h3>
+              <button
+                onClick={() => setIsCustomOfferModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendCustomOffer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  السعر المقترح (دولار) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={customOffer.price}
+                  onChange={(e) => setCustomOffer(prev => ({ ...prev, price: e.target.value }))}
+                  placeholder="أدخل السعر المقترح"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  رسالة للبائع (اختياري)
+                </label>
+                <textarea
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={customOffer.message}
+                  onChange={(e) => setCustomOffer(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="أضف رسالة أو ملاحظات إضافية..."
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomOfferModalOpen(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-[#7EE7FC] text-white rounded-xl hover:bg-[#3bdeff] transition-colors font-medium"
+                >
+                  إرسال العرض
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
