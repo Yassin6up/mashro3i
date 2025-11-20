@@ -57,7 +57,7 @@ const PurchaseRequestModal = ({ isOpen, onClose, project }: PurchaseRequestModal
         id: generateId(),
         type: NOTIFICATION_TYPES.PURCHASE_REQUEST as NotificationType,
         title: 'طلب شراء جديد! 🎉',
-        message: `تهانينا! تم إرسال طلب شراء من ${offerData.buyerName} لمشروعك بمبلغ $${offerData.amount}. هل تريد إتمام هذه الصفقة بسرعة؟`,
+        message: `تهانينا! تم إرسال طلب شراء من ${offerData.buyerName} لمشروعك بمبلغ ${offerData.amount} ج.م. هل تريد إتمام هذه الصفقة بسرعة؟`,
         sellerId: project.seller.name,
         buyerName: offerData.buyerName,
         amount: parseFloat(offerData.amount),
@@ -203,7 +203,7 @@ const PurchaseRequestModal = ({ isOpen, onClose, project }: PurchaseRequestModal
           {/* Offer Amount */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              السعر المقترح (بالدولار الأمريكي) *
+              السعر المقترح (بالجنيه المصري) *
             </label>
             <div className="relative">
               <DollarSign className="absolute right-3 top-3 h-5 w-5 text-green-600" />

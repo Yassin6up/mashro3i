@@ -37,7 +37,7 @@ const TransactionTimeline = ({ transaction, userType }: TransactionTimelineProps
       events.push({
         id: 'paid',
         title: 'Payment Secured in Escrow',
-        description: `Payment of $${transaction.totalAmount} has been secured in escrow`,
+        description: `Payment of ${transaction.totalAmount} EGP has been secured in escrow`,
         date: transaction.paidAt,
         status: 'completed' as const,
         icon: Shield,

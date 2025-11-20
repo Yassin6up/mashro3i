@@ -290,7 +290,7 @@ const BuyerProfilePage = () => {
                 
                 <div className="bg-emerald-50 rounded-xl p-4 text-center">
                   <DollarSign className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-emerald-900">${profileData.totalSpent.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-emerald-900">{profileData.totalSpent.toLocaleString()} ج.م</div>
                   <div className="text-sm text-emerald-700">إجمالي الإنفاق</div>
                 </div>
                 
@@ -413,7 +413,7 @@ const BuyerProfilePage = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-bold text-emerald-900">إجمالي الإنفاق</h3>
-                        <p className="text-3xl font-bold text-emerald-600">${profileData.totalSpent.toLocaleString()}</p>
+                        <p className="text-3xl font-bold text-emerald-600">{profileData.totalSpent.toLocaleString()} ج.م</p>
                       </div>
                       <DollarSign className="w-12 h-12 text-emerald-500" />
                     </div>
@@ -442,7 +442,7 @@ const BuyerProfilePage = () => {
                         <p className="font-medium text-slate-800">تم شراء مشروع "نظام إدارة المبيعات"</p>
                         <p className="text-sm text-slate-500">منذ ساعتين</p>
                       </div>
-                      <span className="text-green-600 font-bold">$2,500</span>
+                      <span className="text-green-600 font-bold">2,500 ج.م</span>
                     </div>
                     
                     <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm">
@@ -514,7 +514,7 @@ const BuyerProfilePage = () => {
                           </div>
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="text-xl font-bold text-slate-800">${purchase.price.toLocaleString()}</div>
+                              <div className="text-xl font-bold text-slate-800">{purchase.price.toLocaleString()} ج.م</div>
                               <div className="text-sm text-slate-500">{purchase.purchaseDate}</div>
                             </div>
                             <div className="flex gap-2">
@@ -576,7 +576,7 @@ const BuyerProfilePage = () => {
                       </div>
                       
                       <div className="flex items-center justify-between mb-4">
-                        <div className="text-2xl font-bold text-slate-800">${project.price.toLocaleString()}</div>
+                        <div className="text-2xl font-bold text-slate-800">{project.price.toLocaleString()} ج.م</div>
                         <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                           {project.category}
                         </span>

@@ -34,7 +34,7 @@ const EscrowCheckoutPage = ({ projectId, offerId, transactionId }: EscrowCheckou
       isEnabled: true,
       processingFee: 2.9,
       processingTime: 'فوري',
-      supportedCurrencies: ['USD', 'EUR', 'GBP']
+      supportedCurrencies: ['EGP', 'USD', 'EUR', 'GBP']
     },
     {
       id: 'paypal',
@@ -45,7 +45,7 @@ const EscrowCheckoutPage = ({ projectId, offerId, transactionId }: EscrowCheckou
       isEnabled: true,
       processingFee: 3.4,
       processingTime: 'فوري',
-      supportedCurrencies: ['USD', 'EUR']
+      supportedCurrencies: ['EGP', 'USD', 'EUR']
     },
     {
       id: 'bank_transfer',
@@ -56,7 +56,7 @@ const EscrowCheckoutPage = ({ projectId, offerId, transactionId }: EscrowCheckou
       isEnabled: true,
       processingFee: 0,
       processingTime: '1-3 أيام عمل',
-      supportedCurrencies: ['USD']
+      supportedCurrencies: ['EGP', 'USD']
     },
     {
       id: 'crypto',

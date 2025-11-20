@@ -972,7 +972,7 @@ const SellerProfilePage = ({ params }: { params: { sellerId: string } }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    السعر بالدولار *
+                    السعر بالجنيه المصري *
                   </label>
                   <div className="relative">
                     <DollarSign className="absolute right-3 top-3 h-5 w-5 text-gray-400" />

@@ -98,7 +98,7 @@ const EarningsPage = () => {
               <DollarSign className="w-8 h-8" />
               <p className="text-blue-100">الرصيد المتاح</p>
             </div>
-            <p className="text-3xl font-bold">${balance?.available_balance?.toFixed(2) || '0.00'}</p>
+            <p className="text-3xl font-bold">{balance?.available_balance?.toFixed(2) || '0.00'} ج.م</p>
           </div>
 
           <div className="card">
@@ -107,7 +107,7 @@ const EarningsPage = () => {
               <p className="text-sm text-gray-600">إجمالي الأرباح</p>
             </div>
             <p className="text-2xl font-bold text-gray-900">
-              ${balance?.earnings?.reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0).toFixed(2) || '0.00'}
+              {balance?.earnings?.reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0).toFixed(2) || '0.00'} ج.م
             </p>
           </div>
 
@@ -117,7 +117,7 @@ const EarningsPage = () => {
               <p className="text-sm text-gray-600">تم السحب</p>
             </div>
             <p className="text-2xl font-bold text-gray-900">
-              ${withdrawals?.reduce((sum: number, w: any) => sum + parseFloat(w.amount), 0).toFixed(2) || '0.00'}
+              {withdrawals?.reduce((sum: number, w: any) => sum + parseFloat(w.amount), 0).toFixed(2) || '0.00'} ج.م
             </p>
           </div>
         </div>
@@ -140,7 +140,7 @@ const EarningsPage = () => {
               {withdrawals.map((withdrawal) => (
                 <div key={withdrawal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">${withdrawal.amount}</p>
+                    <p className="font-medium text-gray-900">{withdrawal.amount} ج.م</p>
                     <p className="text-sm text-gray-600">{withdrawal.withdrawal_method_name}</p>
                   </div>
                   <div className="text-left">
@@ -170,7 +170,7 @@ const EarningsPage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">طلب سحب</h2>
               
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">الرصيد المتاح: ${balance?.available_balance?.toFixed(2)}</p>
+                <p className="text-sm text-gray-600 mb-2">الرصيد المتاح: {balance?.available_balance?.toFixed(2)} ج.م</p>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   المبلغ المطلوب *
                 </label>

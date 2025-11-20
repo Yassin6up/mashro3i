@@ -1,7 +1,7 @@
 /**
  * Format a number as currency with proper localization
  */
-export const formatCurrency = (amount: number, currency: string = 'USD', locale: string = 'ar-SA'): string => {
+export const formatCurrency = (amount: number, currency: string = 'EGP', locale: string = 'ar-EG'): string => {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
